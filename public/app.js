@@ -144,34 +144,40 @@ async function registerCustomer() {
 
 // --- LOYALTY LIST, SEARCH, EXPORT, IMPORT, DELETE ---
 
-let currentCustomers = []; // Stores the full list from database
+let currentCustomers = [];
+let activeRewardId = null; // Stores ID of customer currently in the modal
 
 async function loadCustomers() {
     const list = document.getElementById('customer-list');
     list.innerHTML = "Summoning data...";
-    
     try {
         const res = await fetch(`${API_URL}/customer?action=list`);
-        currentCustomers = await res.json(); // Save data globally
-
-        renderList(currentCustomers); // Render the full list initially
+        currentCustomers = await res.json();
+        renderList(currentCustomers);
     } catch (e) { list.innerHTML = "Error loading data."; }
 }
 
-// NEW: Search Logic
 function searchCustomers() {
     const query = document.getElementById('search-input').value.toLowerCase();
-    
     const filtered = currentCustomers.filter(c => 
         c.name.toLowerCase().includes(query) || 
         c.mobile.includes(query) ||
         c.customer_id.toLowerCase().includes(query)
     );
-
     renderList(filtered);
 }
 
-// NEW: Helper function to draw the list
+// 1. GENERATE VISUAL ORBS
+function getOrbHTML(count) {
+    let html = '<div class="stamp-container">';
+    for (let i = 0; i < 6; i++) {
+        const isFilled = i < count;
+        html += `<div class="orb ${isFilled ? 'filled' : ''}"></div>`;
+    }
+    html += '</div>';
+    return html;
+}
+
 function renderList(data) {
     const list = document.getElementById('customer-list');
     list.innerHTML = "";
@@ -182,13 +188,15 @@ function renderList(data) {
     }
 
     data.forEach(c => {
-        let statusHtml = "";
+        // Decide what button to show
+        let actionBtn = "";
+        
         if (c.stamps >= 6) {
-            statusHtml = `<div class="free-msg">🎉 FREE SNACK READY!</div>
-                          <button onclick="stamp('${c.customer_id}', true)">Redeem</button>`;
+            // If they already have 6, show a Redeem button (triggers modal manually)
+            actionBtn = `<button style="background:gold; color:black;" onclick="openRewardModal('${c.customer_id}', '${c.name}')">🎁 Redeem Prize</button>`;
         } else {
-            statusHtml = `<div class="stamps">${'🔥'.repeat(c.stamps)} (${c.stamps}/6)</div>
-                          <button onclick="stamp('${c.customer_id}', false)">Stamp</button>`;
+            // Standard Stamp Button
+            actionBtn = `<button onclick="addStamp('${c.customer_id}')">Stamp +1</button>`;
         }
 
         const div = document.createElement('div');
@@ -199,7 +207,11 @@ function renderList(data) {
                 <span style="color:gold;">${c.customer_id}</span>
             </div>
             <div>Mobile: ${c.mobile}</div>
-            ${statusHtml}
+            
+            ${getOrbHTML(c.stamps)}
+            
+            <div style="margin-top:5px;">${actionBtn}</div>
+
             <div style="margin-top:10px; border-top:1px solid #333; padding-top:5px;">
                  <button class="danger-btn" onclick="deleteCustomer('${c.customer_id}')">Delete</button>
                  <button class="secondary" style="font-size:0.8em" onclick="generateIDCard('${c.name}', '${c.customer_id}')">View ID Card</button>
@@ -209,40 +221,68 @@ function renderList(data) {
     });
 }
 
-async function stamp(id, isReset) {
-    // 1. Update Server
+// 2. ADD STAMP LOGIC
+async function addStamp(id) {
+    // Optimistic Update (Update screen instantly before DB finishes)
+    const cust = currentCustomers.find(c => c.customer_id === id);
+    if (!cust) return;
+
+    cust.stamps += 1; // Update locally
+    searchCustomers(); // Refresh UI to show new Orb
+
+    // Check if they just hit 6
+    if (cust.stamps === 6) {
+        openRewardModal(cust.customer_id, cust.name);
+    }
+
+    // Update Database in background
     await fetch(`${API_URL}/customer`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'stamp', id, isReset })
+        body: JSON.stringify({ action: 'stamp', id, isReset: false })
     });
+}
+
+// 3. MODAL LOGIC
+function openRewardModal(id, name) {
+    activeRewardId = id;
+    document.getElementById('reward-cust-name').innerText = name;
+    document.getElementById('reward-modal').classList.remove('hidden');
+}
+
+function closeModal() {
+    document.getElementById('reward-modal').classList.add('hidden');
+    activeRewardId = null;
+}
+
+async function redeemReward() {
+    if (!activeRewardId) return;
+
+    // Reset local data
+    const cust = currentCustomers.find(c => c.customer_id === activeRewardId);
+    if (cust) cust.stamps = 0;
     
-    // 2. Update Local Data Immediately (makes UI faster)
-    const cust = currentCustomers.find(c => c.customer_id === id);
-    if(cust) {
-        if(isReset) cust.stamps = 0;
-        else cust.stamps += 1;
-    }
-    
-    // 3. Re-render list (preserves search result)
-    searchCustomers(); 
+    closeModal();
+    searchCustomers(); // Refresh UI to show empty Orbs
+
+    // Update Database
+    await fetch(`${API_URL}/customer`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'stamp', id: activeRewardId, isReset: true })
+    });
 }
 
 async function deleteCustomer(id) {
     if(!confirm("Are you sure you want to banish this customer?")) return;
-    
     const res = await fetch(`${API_URL}/customer`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'delete', id })
     });
-    
     if(res.ok) {
-        // Remove from local list and refresh
         currentCustomers = currentCustomers.filter(c => c.customer_id !== id);
         searchCustomers();
-    } else {
-        alert("Could not delete");
     }
 }
 
