@@ -133,9 +133,8 @@ async function registerCustomer() {
     }
 }
 
-// --- LOYALTY LIST, SEARCH & MODAL ---
+// --- LOYALTY LIST & SEARCH ---
 let currentCustomers = [];
-let activeRewardId = null;
 
 async function loadCustomers() {
     const list = document.getElementById('customer-list');
@@ -157,16 +156,6 @@ function searchCustomers() {
     renderList(filtered);
 }
 
-function getOrbHTML(count) {
-    let html = '<div class="stamp-container">';
-    for (let i = 0; i < 6; i++) {
-        const isFilled = i < count;
-        html += `<div class="orb ${isFilled ? 'filled' : ''}"></div>`;
-    }
-    html += '</div>';
-    return html;
-}
-
 function renderList(data) {
     const list = document.getElementById('customer-list');
     list.innerHTML = "";
@@ -177,11 +166,14 @@ function renderList(data) {
     }
 
     data.forEach(c => {
-        let actionBtn = "";
+        let statusHtml = "";
+        
         if (c.stamps >= 6) {
-            actionBtn = `<button style="background:gold; color:black;" onclick="openRewardModal('${c.customer_id}', '${c.name}')">🎁 Redeem Prize</button>`;
+             statusHtml = `<div class="free-msg">🎉 FREE SNACK AVAILABLE!</div>
+                           <button onclick="stamp('${c.customer_id}', true)">Redeem & Reset</button>`;
         } else {
-            actionBtn = `<button onclick="addStamp('${c.customer_id}')">Stamp +1</button>`;
+             statusHtml = `<div class="stamps">Stamps: ${'🔥'.repeat(c.stamps)} (${c.stamps}/6)</div>
+                           <button onclick="stamp('${c.customer_id}', false)">Stamp +1</button>`;
         }
 
         const div = document.createElement('div');
@@ -192,8 +184,9 @@ function renderList(data) {
                 <span style="color:gold;">${c.customer_id}</span>
             </div>
             <div>Mobile: ${c.mobile}</div>
-            ${getOrbHTML(c.stamps)}
-            <div style="margin-top:5px;">${actionBtn}</div>
+            
+            ${statusHtml}
+
             <div style="margin-top:10px; border-top:1px solid #333; padding-top:5px;">
                  <button class="danger-btn" onclick="deleteCustomer('${c.customer_id}')">Delete</button>
                  <button class="secondary" style="font-size:0.8em" onclick="generateIDCard('${c.name}', '${c.customer_id}')">View ID Card</button>
@@ -203,53 +196,20 @@ function renderList(data) {
     });
 }
 
-// 2. ADD STAMP (WITH DELAY FIX)
-async function addStamp(id) {
-    const cust = currentCustomers.find(c => c.customer_id === id);
-    if (!cust) return;
-
-    cust.stamps += 1;
-    searchCustomers(); // Update Orbs immediately
-
-    // If they hit 6, wait 0.6 seconds before showing modal
-    if (cust.stamps === 6) {
-        setTimeout(() => {
-            openRewardModal(cust.customer_id, cust.name);
-        }, 600); // 600ms Delay
-    }
-
+async function stamp(id, isReset) {
     await fetch(`${API_URL}/customer`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'stamp', id, isReset: false })
+        body: JSON.stringify({ action: 'stamp', id, isReset })
     });
-}
-
-function openRewardModal(id, name) {
-    activeRewardId = id;
-    document.getElementById('reward-cust-name').innerText = name;
-    document.getElementById('reward-modal').classList.remove('hidden');
-}
-
-function closeModal() {
-    document.getElementById('reward-modal').classList.add('hidden');
-    activeRewardId = null;
-}
-
-async function redeemReward() {
-    if (!activeRewardId) return;
-
-    const cust = currentCustomers.find(c => c.customer_id === activeRewardId);
-    if (cust) cust.stamps = 0;
     
-    closeModal();
+    // Quick local update
+    const cust = currentCustomers.find(c => c.customer_id === id);
+    if(cust) {
+        if(isReset) cust.stamps = 0;
+        else cust.stamps += 1;
+    }
     searchCustomers();
-
-    await fetch(`${API_URL}/customer`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'stamp', id: activeRewardId, isReset: true })
-    });
 }
 
 async function deleteCustomer(id) {
