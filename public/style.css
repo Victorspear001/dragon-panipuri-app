@@ -158,3 +158,76 @@ button:hover {
     color: #555;
     font-style: italic;
 }
+/* --- DRAGON ORB STAMPS --- */
+.stamp-container {
+    display: flex;
+    gap: 8px;
+    margin: 10px 0;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.orb {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid #444;
+    background: #222; /* Empty state */
+    box-shadow: inset 0 0 5px #000;
+    transition: all 0.3s ease;
+}
+
+.orb.filled {
+    background: radial-gradient(circle at 30% 30%, #ffd700, #ff4500, #8b0000);
+    border-color: #ffd700;
+    box-shadow: 0 0 10px #ff4500, inset 0 0 5px #ffd700;
+    transform: scale(1.1);
+    animation: orbGlow 1.5s infinite alternate;
+}
+
+@keyframes orbGlow {
+    from { box-shadow: 0 0 5px #ff4500; }
+    to { box-shadow: 0 0 15px #ff4500, 0 0 5px gold; }
+}
+
+/* --- REWARD MODAL --- */
+.modal {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s;
+}
+
+.modal-content {
+    background: linear-gradient(135deg, #2a0a0a, #000);
+    border: 4px solid var(--dragon-gold);
+    padding: 30px;
+    border-radius: 20px;
+    text-align: center;
+    max-width: 90%;
+    width: 400px;
+    box-shadow: 0 0 50px var(--dragon-blood);
+    animation: zoomIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.reward-icon {
+    font-size: 80px;
+    margin: 10px 0;
+    text-shadow: 0 0 20px gold;
+}
+
+.glow-text {
+    color: var(--dragon-gold);
+    text-shadow: 0 0 10px red, 0 0 20px orange;
+}
+
+@keyframes zoomIn {
+    from { transform: scale(0); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
