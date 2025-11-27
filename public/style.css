@@ -129,3 +129,32 @@ button:hover {
 }
 
 @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+/* Search Bar Styling */
+.search-container {
+    margin-bottom: 20px;
+    position: relative;
+}
+
+#search-input {
+    width: 90%;
+    padding: 15px;
+    background: #000;
+    border: 2px solid var(--dragon-fire);
+    border-radius: 50px; /* Rounded dragon eye shape */
+    color: var(--dragon-gold);
+    font-size: 1.1em;
+    text-align: center;
+    box-shadow: 0 0 15px rgba(255, 69, 0, 0.3);
+    transition: 0.3s;
+}
+
+#search-input:focus {
+    box-shadow: 0 0 25px var(--dragon-fire);
+    border-color: var(--dragon-gold);
+    outline: none;
+}
+
+#search-input::placeholder {
+    color: #555;
+    font-style: italic;
+}
