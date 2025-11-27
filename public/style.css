@@ -90,7 +90,10 @@ button:hover {
     padding: 5px 10px;
 }
 
-.hidden { display: none; }
+/* --- CRITICAL FIX: Ensure hidden elements STAY hidden --- */
+.hidden { 
+    display: none !important; 
+}
 
 /* Dashboard Toolbar */
 .toolbar {
