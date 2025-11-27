@@ -1,78 +1,131 @@
 :root {
-    --dragon-red: #8b0000;
+    --dragon-blood: #8a0303;
+    --dragon-fire: #ff4500;
     --dragon-gold: #ffd700;
-    --dragon-black: #1a1a1a;
-    --text-color: #f0f0f0;
+    --dragon-scale: #1a0b0b;
+    --text-glow: 0 0 10px rgba(255, 69, 0, 0.8);
 }
 
 body {
-    background-color: var(--dragon-black);
-    color: var(--text-color);
+    background-color: black;
+    color: white;
     font-family: 'Roboto', sans-serif;
     text-align: center;
     margin: 0;
     padding: 20px;
-    background-image: linear-gradient(45deg, #000 25%, #111 25%, #111 50%, #000 50%, #000 75%, #111 75%, #111 100%);
-    background-size: 20px 20px;
+    /* Dragon Scale Background Pattern */
+    background-image: radial-gradient(circle at 50% 50%, #2a1010 0%, #000 80%);
+    min-height: 100vh;
 }
 
 h1, h2, h3 {
     font-family: 'Cinzel', serif;
     color: var(--dragon-gold);
-    text-shadow: 2px 2px var(--dragon-red);
+    text-shadow: 2px 2px var(--dragon-blood), var(--text-glow);
+    text-transform: uppercase;
+    letter-spacing: 2px;
 }
 
 .container {
-    max-width: 500px;
+    max-width: 600px;
     margin: 0 auto;
-    background: rgba(0, 0, 0, 0.8);
-    padding: 20px;
-    border: 2px solid var(--dragon-red);
-    border-radius: 15px;
-    box-shadow: 0 0 20px var(--dragon-red);
+    background: rgba(20, 0, 0, 0.9);
+    padding: 25px;
+    border: 3px solid var(--dragon-fire);
+    border-radius: 20px;
+    box-shadow: 0 0 30px var(--dragon-fire), inset 0 0 20px var(--dragon-blood);
 }
 
+/* Fiery Inputs */
 input, select {
     display: block;
     width: 90%;
-    margin: 10px auto;
-    padding: 10px;
-    background: #333;
-    border: 1px solid var(--dragon-gold);
-    color: white;
-    border-radius: 5px;
-}
-
-button {
-    background: var(--dragon-red);
+    margin: 15px auto;
+    padding: 12px;
+    background: #000;
+    border: 2px solid var(--dragon-blood);
     color: var(--dragon-gold);
-    border: 2px solid var(--dragon-gold);
-    padding: 10px 20px;
-    font-family: 'Cinzel', serif;
-    font-weight: bold;
-    cursor: pointer;
-    margin: 10px;
+    border-radius: 8px;
+    font-size: 16px;
     transition: 0.3s;
 }
 
-button:hover {
-    background: var(--dragon-gold);
-    color: var(--dragon-red);
+input:focus {
+    border-color: var(--dragon-gold);
+    box-shadow: 0 0 15px var(--dragon-fire);
+    outline: none;
 }
 
-.secondary { background: #333; border-color: #666; }
+/* Dragon Buttons */
+button {
+    background: linear-gradient(45deg, var(--dragon-blood), var(--dragon-fire));
+    color: white;
+    border: 2px solid var(--dragon-gold);
+    padding: 12px 25px;
+    font-family: 'Cinzel', serif;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    margin: 10px;
+    border-radius: 5px;
+    box-shadow: 0 4px 15px rgba(255, 69, 0, 0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px var(--dragon-gold);
+    background: linear-gradient(45deg, var(--dragon-fire), var(--dragon-gold));
+    color: black;
+}
+
+.secondary { 
+    background: #333; 
+    border-color: #666; 
+}
+
+.danger-btn {
+    background: linear-gradient(to bottom, #ff0000, #550000);
+    border: 1px solid red;
+    font-size: 0.8em;
+    padding: 5px 10px;
+}
+
 .hidden { display: none; }
-.links span { color: var(--dragon-gold); cursor: pointer; text-decoration: underline; font-size: 0.9em; }
+
+/* Dashboard Toolbar */
+.toolbar {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--dragon-blood);
+    padding-bottom: 15px;
+}
 
 /* Customer List Items */
 .cust-item {
-    border: 1px solid var(--dragon-gold);
-    margin: 10px 0;
-    padding: 10px;
-    background: #222;
+    border: 1px solid var(--dragon-fire);
+    margin: 15px 0;
+    padding: 15px;
+    background: linear-gradient(90deg, #1a0505, #000);
     text-align: left;
+    border-radius: 10px;
+    position: relative;
+    box-shadow: 3px 3px 10px rgba(0,0,0,0.5);
 }
-.stamps { font-size: 1.2em; color: var(--dragon-gold); }
-.free-msg { color: #00ff00; font-weight: bold; animation: pulse 1s infinite; }
+
+.stamps { 
+    font-size: 1.3em; 
+    color: var(--dragon-fire); 
+    text-shadow: 0 0 5px var(--dragon-fire);
+}
+
+.free-msg { 
+    color: #00ff00; 
+    font-weight: bold; 
+    text-shadow: 0 0 10px #00ff00;
+    animation: pulse 1s infinite; 
+}
 
 @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
