@@ -142,9 +142,9 @@ async function registerCustomer() {
     }
 }
 
-// --- LOYALTY LIST, EXPORT, IMPORT, DELETE ---
+// --- LOYALTY LIST, SEARCH, EXPORT, IMPORT, DELETE ---
 
-let currentCustomers = []; // Store locally for export
+let currentCustomers = []; // Stores the full list from database
 
 async function loadCustomers() {
     const list = document.getElementById('customer-list');
@@ -152,42 +152,80 @@ async function loadCustomers() {
     
     try {
         const res = await fetch(`${API_URL}/customer?action=list`);
-        currentCustomers = await res.json(); // Save for export
+        currentCustomers = await res.json(); // Save data globally
 
-        list.innerHTML = "";
-        currentCustomers.forEach(c => {
-            let statusHtml = "";
-            if (c.stamps >= 6) {
-                statusHtml = `<div class="free-msg">🎉 FREE SNACK READY!</div>
-                              <button onclick="stamp('${c.customer_id}', true)">Redeem</button>`;
-            } else {
-                statusHtml = `<div class="stamps">${'🔥'.repeat(c.stamps)} (${c.stamps}/6)</div>
-                              <button onclick="stamp('${c.customer_id}', false)">Stamp</button>`;
-            }
-
-            const div = document.createElement('div');
-            div.className = 'cust-item';
-            div.innerHTML = `
-                <div style="display:flex; justify-content:space-between;">
-                    <strong>${c.name}</strong> 
-                    <span style="color:gold;">${c.customer_id}</span>
-                </div>
-                <div>Mobile: ${c.mobile}</div>
-                ${statusHtml}
-                <button class="danger-btn" onclick="deleteCustomer('${c.customer_id}')">Delete</button>
-            `;
-            list.appendChild(div);
-        });
+        renderList(currentCustomers); // Render the full list initially
     } catch (e) { list.innerHTML = "Error loading data."; }
 }
 
+// NEW: Search Logic
+function searchCustomers() {
+    const query = document.getElementById('search-input').value.toLowerCase();
+    
+    const filtered = currentCustomers.filter(c => 
+        c.name.toLowerCase().includes(query) || 
+        c.mobile.includes(query) ||
+        c.customer_id.toLowerCase().includes(query)
+    );
+
+    renderList(filtered);
+}
+
+// NEW: Helper function to draw the list
+function renderList(data) {
+    const list = document.getElementById('customer-list');
+    list.innerHTML = "";
+
+    if (data.length === 0) {
+        list.innerHTML = "<div style='color:grey'>No dragons found...</div>";
+        return;
+    }
+
+    data.forEach(c => {
+        let statusHtml = "";
+        if (c.stamps >= 6) {
+            statusHtml = `<div class="free-msg">🎉 FREE SNACK READY!</div>
+                          <button onclick="stamp('${c.customer_id}', true)">Redeem</button>`;
+        } else {
+            statusHtml = `<div class="stamps">${'🔥'.repeat(c.stamps)} (${c.stamps}/6)</div>
+                          <button onclick="stamp('${c.customer_id}', false)">Stamp</button>`;
+        }
+
+        const div = document.createElement('div');
+        div.className = 'cust-item';
+        div.innerHTML = `
+            <div style="display:flex; justify-content:space-between;">
+                <strong>${c.name}</strong> 
+                <span style="color:gold;">${c.customer_id}</span>
+            </div>
+            <div>Mobile: ${c.mobile}</div>
+            ${statusHtml}
+            <div style="margin-top:10px; border-top:1px solid #333; padding-top:5px;">
+                 <button class="danger-btn" onclick="deleteCustomer('${c.customer_id}')">Delete</button>
+                 <button class="secondary" style="font-size:0.8em" onclick="generateIDCard('${c.name}', '${c.customer_id}')">View ID Card</button>
+            </div>
+        `;
+        list.appendChild(div);
+    });
+}
+
 async function stamp(id, isReset) {
+    // 1. Update Server
     await fetch(`${API_URL}/customer`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'stamp', id, isReset })
     });
-    loadCustomers();
+    
+    // 2. Update Local Data Immediately (makes UI faster)
+    const cust = currentCustomers.find(c => c.customer_id === id);
+    if(cust) {
+        if(isReset) cust.stamps = 0;
+        else cust.stamps += 1;
+    }
+    
+    // 3. Re-render list (preserves search result)
+    searchCustomers(); 
 }
 
 async function deleteCustomer(id) {
@@ -198,8 +236,14 @@ async function deleteCustomer(id) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'delete', id })
     });
-    if(res.ok) loadCustomers();
-    else alert("Could not delete");
+    
+    if(res.ok) {
+        // Remove from local list and refresh
+        currentCustomers = currentCustomers.filter(c => c.customer_id !== id);
+        searchCustomers();
+    } else {
+        alert("Could not delete");
+    }
 }
 
 // --- EXPORT CSV ---
