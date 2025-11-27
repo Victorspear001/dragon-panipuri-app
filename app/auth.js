@@ -1,23 +1,29 @@
-import { Pool } from 'pg';
+const { Pool } = require('pg');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
 });
 
-export default async function handler(req, res) {
+module.exports = async function (req, res) {
   const { action, user, pass, q, a, newPass } = req.body;
 
   try {
     if (action === 'register') {
+      // Check if user already exists
+      const userCheck = await pool.query('SELECT * FROM admins WHERE username = $1', [user]);
+      if (userCheck.rows.length > 0) {
+          return res.status(400).json({ message: 'Username already taken' });
+      }
+
       await pool.query('INSERT INTO admins (username, password, security_question, security_answer) VALUES ($1, $2, $3, $4)', [user, pass, q, a]);
-      return res.status(200).json({ message: 'Admin Registered' });
+      return res.status(200).json({ message: 'Admin Registered Successfully' });
     } 
     
     else if (action === 'login') {
       const result = await pool.query('SELECT * FROM admins WHERE username = $1 AND password = $2', [user, pass]);
       if (result.rows.length > 0) return res.status(200).json({ message: 'Success' });
-      return res.status(401).json({ error: 'Fail' });
+      return res.status(401).json({ error: 'Invalid Credentials' });
     }
 
     else if (action === 'recover') {
@@ -30,6 +36,7 @@ export default async function handler(req, res) {
     }
 
   } catch (err) {
+    console.error(err); // This helps see the error in Vercel logs
     return res.status(500).json({ error: err.message });
   }
-}
+};
