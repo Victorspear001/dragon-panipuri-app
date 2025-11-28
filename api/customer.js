@@ -15,10 +15,9 @@ module.exports = async function (req, res) {
     }
   }
 
-  const { action, name, mobile, id, isReset, data } = req.body;
+  const { action, name, mobile, id, isReset, data, password } = req.body;
 
   try {
-    // ADD SINGLE CUSTOMER
     if (action === 'add') {
       const randomId = Math.floor(1000 + Math.random() * 9000);
       const custId = `RK${randomId}`;
@@ -26,7 +25,6 @@ module.exports = async function (req, res) {
       return res.status(200).json({ customerId: custId });
     }
 
-    // UPDATE STAMPS
     if (action === 'stamp') {
       if (isReset) {
         await pool.query('UPDATE customers SET stamps = 0 WHERE customer_id = $1', [id]);
@@ -36,18 +34,21 @@ module.exports = async function (req, res) {
       return res.status(200).json({ message: 'Updated' });
     }
 
-    // DELETE CUSTOMER
+    // --- SECURE DELETE CHECK ---
     if (action === 'delete') {
+        // Verify password against Admin table
+        const authCheck = await pool.query('SELECT * FROM admins WHERE password = $1', [password]);
+        
+        if (authCheck.rows.length === 0) {
+            return res.status(401).json({ error: 'WRONG PASSWORD! Deletion Denied.' });
+        }
+
         await pool.query('DELETE FROM customers WHERE customer_id = $1', [id]);
-        return res.status(200).json({ message: 'Deleted' });
+        return res.status(200).json({ message: 'Deleted Successfully' });
     }
 
-    // IMPORT CSV (Bulk Restore)
     if (action === 'import' && Array.isArray(data)) {
         for (const c of data) {
-            // "ON CONFLICT DO NOTHING" ensures we don't crash if ID already exists
-            // But standard SQL requires a constraint name or syntax. 
-            // Simplest way for you: Check if exists, then insert.
             const check = await pool.query('SELECT * FROM customers WHERE customer_id = $1', [c.customer_id]);
             if (check.rows.length === 0 && c.customer_id) {
                 await pool.query(
