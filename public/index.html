@@ -2,9 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <!-- Viewport for Mobile Scaling -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- PWA Settings -->
     <meta name="theme-color" content="#8a0303">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -78,28 +76,18 @@
                 <input type="text" id="cust-name" placeholder="Customer Name">
                 <input type="number" id="cust-mobile" placeholder="Mobile Number">
                 <button onclick="registerCustomer()" class="large-btn">Generate ID Card</button>
-                
-                <div id="id-card-area" class="hidden">
-                    <div class="canvas-wrapper">
-                        <canvas id="cardCanvas" width="450" height="270"></canvas>
-                    </div>
-                    <br>
-                    <button onclick="downloadID()">Download ID Card</button>
-                </div>
             </section>
 
             <!-- Customer List Tab -->
             <section id="list-cust-section" class="hidden">
                 <h3>Loyalty Realm</h3>
                 
-                <!-- Import/Export Tools -->
                 <div class="tools-panel">
                     <button onclick="exportCSV()" class="small-btn">⬇ Export</button>
                     <button onclick="document.getElementById('csv-input').click()" class="small-btn">⬆ Import</button>
                     <input type="file" id="csv-input" accept=".csv" class="hidden" onchange="importCSV()">
                 </div>
 
-                <!-- Search Bar -->
                 <div class="search-container">
                     <input type="text" id="search-input" placeholder="🔍 Name or Mobile..." onkeyup="searchCustomers()">
                 </div>
@@ -114,18 +102,27 @@
         <div class="modal-content">
             <h2 class="glow-text">🔥 LEGENDARY 🔥</h2>
             <p>The Dragon is Pleased!</p>
-            
             <div class="reward-icon">🐲 🎁</div>
-            
             <p style="font-size: 1.1em; margin: 15px 0;">
                 <span id="reward-cust-name" style="color: gold; font-weight:bold;"></span> 
                 has collected 6 Orbs.
             </p>
-            
             <h3 style="color: #00ff00;">GET 1 FREE SNACK!</h3>
-            
             <button onclick="redeemReward()" class="large-btn">Give Snack & Reset</button>
-            <button class="secondary" onclick="closeModal()">Close</button>
+            <button class="secondary" onclick="closeModal('reward-modal')">Close</button>
+        </div>
+    </div>
+
+    <!-- ID CARD MODAL (NEW) -->
+    <div id="id-modal" class="modal hidden">
+        <div class="modal-content" style="max-width: 500px;">
+            <h3>Your Loyalty Card</h3>
+            <div class="canvas-wrapper">
+                <canvas id="cardCanvas" width="450" height="270"></canvas>
+            </div>
+            <br>
+            <button onclick="downloadID()" class="large-btn">Download Image</button>
+            <button class="secondary" onclick="closeModal('id-modal')">Close</button>
         </div>
     </div>
 
