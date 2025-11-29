@@ -3,20 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RK Dragon Panipuri</title>
+    <title>Dragon Command</title>
     <meta name="theme-color" content="#8a0303">
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-    <div id="landing-page" class="container">
+    <button onclick="goHome()" class="home-icon" title="Back to Home">🏠</button>
+
+    <div id="landing-page" class="container glass-panel">
         <header>
-            <h1>🐉 RK DRAGON 🐉</h1>
-            <p>Choose Your Destiny</p>
+            <div class="logo-glow">🐲</div>
+            <h1>RK DRAGON</h1>
+            <p class="subtitle">Loyalty & Rewards System</p>
         </header>
         <div class="split-menu">
             <button onclick="goToCustomerLogin()" class="large-btn pulse-btn">I am a Customer</button>
@@ -24,74 +26,56 @@
         </div>
     </div>
 
-    <div id="customer-portal" class="container hidden">
-        <button onclick="goHome()" class="back-corner">🏠</button>
-        
-        <section id="cust-login-sec">
-            <h2>Customer Guild</h2>
-            <p>Enter your ID to check your stats</p>
-            <input type="text" id="cust-login-id" placeholder="Enter ID (e.g. RK1234)">
-            <button onclick="customerLogin()" class="large-btn">Open Grimoire</button>
-        </section>
-
-        <section id="cust-dashboard" class="hidden">
-            <h2 id="display-cust-name">Warrior</h2>
-            
-            <div class="rpg-card">
-                <div class="level-header">
-                    <span id="rpg-rank">Bronze</span>
-                    <span style="font-size:0.8em; color:#888;">Lvl: <span id="lifetime-count">0</span></span>
-                </div>
-                <div class="level-progress">
-                    <div class="bar-fill" id="xp-bar"></div>
-                </div>
-                <p id="next-rank-msg" style="font-size: 0.8em; color: #aaa; margin-top:5px;"></p>
-            </div>
-
-            <h3 style="margin-top:20px; color:gold;">Current Quest</h3>
-            <div id="cust-stamps-display"></div>
-            <p id="cust-status-msg"></p>
-        </section>
-    </div>
-
-    <div id="admin-portal" class="container hidden">
-        <button onclick="goHome()" class="back-corner">🏠</button>
+    <div id="admin-portal" class="container glass-panel hidden">
+        <header>
+            <h1>WARLORD ACCESS</h1>
+        </header>
 
         <section id="admin-auth-sec">
-            <h2>Warlord Access</h2>
-            <input type="email" id="admin-email" placeholder="Admin Email">
-            <input type="password" id="admin-pass" placeholder="Password">
+            <div class="input-group">
+                <input type="email" id="admin-email" placeholder="Admin Email">
+                <input type="text" id="admin-username" placeholder="Username (For Registration Only)">
+                <input type="password" id="admin-pass" placeholder="Password">
+            </div>
+            
             <button onclick="adminSignIn()" class="large-btn">Login</button>
-            <div style="margin-top:10px;">
+            
+            <div class="auth-actions">
                 <button onclick="adminSignUp()" class="secondary small-btn">Register New</button>
                 <button onclick="resetAdminPassword()" class="secondary small-btn">Forgot Pass?</button>
             </div>
+
+            <div class="divider">
+                <span>OR</span>
+            </div>
+            
+            <a href="customer.html" class="link-btn">Go to Customer Portal &rarr;</a>
         </section>
 
         <section id="admin-dashboard" class="hidden">
             <div class="toolbar">
-                <button onclick="showAdminTab('add')">Add New</button>
-                <button onclick="showAdminTab('list')">List</button>
-                <button onclick="adminSignOut()" class="secondary">Logout</button>
+                <button onclick="showAdminTab('add')" class="tab-btn active">Add New</button>
+                <button onclick="showAdminTab('list')" class="tab-btn">List</button>
+                <button onclick="adminSignOut()" class="tab-btn danger">Logout</button>
             </div>
 
             <div id="adm-add-sec">
                 <h3>Summon Customer</h3>
-                <input type="text" id="new-name" placeholder="Name">
-                <input type="number" id="new-mobile" placeholder="Mobile">
-                <button onclick="createCustomer()" class="large-btn">Generate ID</button>
+                <input type="text" id="new-name" placeholder="Customer Name">
+                <input type="number" id="new-mobile" placeholder="Mobile Number">
+                <button onclick="createCustomer()" class="large-btn">Generate ID Card</button>
             </div>
 
             <div id="adm-list-sec" class="hidden">
                 <div class="tools-panel">
-                    <button onclick="exportCSV()" class="small-btn">⬇ Export</button>
-                    <button onclick="document.getElementById('csv-input').click()" class="small-btn">⬆ Import</button>
+                    <button onclick="exportCSV()" class="small-btn">⬇ Export CSV</button>
+                    <button onclick="document.getElementById('csv-input').click()" class="small-btn">⬆ Import CSV</button>
                     <input type="file" id="csv-input" accept=".csv" class="hidden" onchange="importCSV()">
                 </div>
                 <div class="search-container">
-                    <input type="text" id="search-input" placeholder="🔍 Search..." onkeyup="searchCustomers()">
+                    <input type="text" id="search-input" placeholder="🔍 Search Name/ID..." onkeyup="searchCustomers()">
                 </div>
-                <div id="customer-list">Loading...</div>
+                <div id="customer-list">Loading scrolls...</div>
             </div>
         </section>
     </div>
@@ -101,8 +85,10 @@
             <h3>Identity Rune</h3>
             <div class="canvas-wrapper"><canvas id="cardCanvas" width="450" height="270"></canvas></div>
             <br>
-            <button onclick="downloadID()" class="large-btn">Save Image</button>
-            <button class="secondary" onclick="closeModal('id-modal')">Close</button>
+            <div class="modal-actions">
+                <button onclick="downloadID()" class="large-btn">Save Image</button>
+                <button class="secondary" onclick="closeModal('id-modal')">Close</button>
+            </div>
         </div>
     </div>
 
