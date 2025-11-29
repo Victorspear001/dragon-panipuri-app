@@ -1,10 +1,8 @@
 :root {
-    --primary: #ff4500;   /* Dragon Fire Orange */
-    --accent: #ffd700;    /* Gold */
-    --dark: #0a0a0a;      /* Deep Black */
+    --primary: #ff4500;   
+    --accent: #ffd700;    
     --panel: rgba(20, 20, 20, 0.85);
     --border: rgba(255, 69, 0, 0.5);
-    --text-shadow: 0 0 10px rgba(255, 69, 0, 0.6);
 }
 
 * { box-sizing: border-box; }
@@ -15,157 +13,63 @@ body {
     font-family: 'Roboto', sans-serif;
     text-align: center;
     margin: 0; padding: 20px 10px;
-    background-image: 
-        radial-gradient(circle at 20% 20%, #2a0000 0%, transparent 40%),
-        radial-gradient(circle at 80% 80%, #1a0500 0%, #000 90%);
+    background-image: radial-gradient(circle at 20% 20%, #2a0000 0%, transparent 40%), radial-gradient(circle at 80% 80%, #1a0500 0%, #000 90%);
     min-height: 100vh;
 }
 
-/* --- HOME ICON ALIGNMENT --- */
+/* HOME ICON FIXED */
 .home-icon {
-    position: fixed;
-    top: 15px;
-    left: 15px;
-    width: 45px;
-    height: 45px;
-    background: rgba(0,0,0,0.8);
-    border: 1px solid var(--accent);
-    border-radius: 50%;
-    color: white;
-    font-size: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-    z-index: 1000;
-    cursor: pointer;
-    box-shadow: 0 0 10px var(--primary);
-    transition: 0.3s;
+    position: fixed; top: 15px; left: 15px; width: 45px; height: 45px;
+    background: rgba(0,0,0,0.8); border: 1px solid var(--accent); border-radius: 50%;
+    color: white; font-size: 24px; display: flex; align-items: center; justify-content: center;
+    text-decoration: none; z-index: 1000; cursor: pointer; box-shadow: 0 0 10px var(--primary);
 }
 .home-icon:hover { transform: scale(1.1); background: var(--primary); }
 
-/* --- TYPOGRAPHY --- */
 h1, h2, h3 {
-    font-family: 'Cinzel', serif;
-    color: var(--accent);
-    text-shadow: 2px 2px #500, 0 0 10px var(--primary);
-    margin: 10px 0;
-    text-transform: uppercase;
+    font-family: 'Cinzel', serif; color: var(--accent); text-shadow: 2px 2px #500; margin: 10px 0; text-transform: uppercase;
 }
 .subtitle { color: #aaa; font-style: italic; font-size: 0.9em; margin-top: -10px; }
 
-/* --- GLASS PANEL --- */
 .glass-panel {
-    background: var(--panel);
-    backdrop-filter: blur(10px);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 25px;
-    width: 100%;
-    max-width: 600px;
-    margin: 40px auto 0; /* Margin top for Home Icon space */
+    background: var(--panel); backdrop-filter: blur(10px);
+    border: 1px solid var(--border); border-radius: 20px;
+    padding: 25px; width: 100%; max-width: 600px; margin: 40px auto 0;
     box-shadow: 0 0 30px rgba(138, 3, 3, 0.3);
 }
 
 .hidden { display: none !important; }
 
-/* --- INPUTS & BUTTONS --- */
 input {
-    width: 100%; padding: 15px; margin: 10px 0;
-    background: rgba(0,0,0,0.6);
-    border: 1px solid #444;
-    color: var(--accent);
-    border-radius: 8px;
-    font-size: 16px;
-    transition: 0.3s;
+    width: 100%; padding: 15px; margin: 8px 0; background: rgba(0,0,0,0.6);
+    border: 1px solid #444; color: var(--accent); border-radius: 8px; font-size: 16px;
 }
-input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 10px var(--primary); }
-
 button {
-    width: 100%; padding: 14px;
-    border-radius: 8px;
-    font-family: 'Cinzel', serif;
-    font-weight: bold; font-size: 16px;
-    cursor: pointer; border: none;
-    transition: 0.3s;
-    margin-bottom: 10px;
+    width: 100%; padding: 14px; border-radius: 8px; font-family: 'Cinzel', serif;
+    font-weight: bold; font-size: 16px; cursor: pointer; border: none; margin-bottom: 10px;
 }
-button:active { transform: scale(0.98); }
-
-.large-btn {
-    background: linear-gradient(135deg, #8b0000, #ff4500);
-    color: white; border: 1px solid var(--accent);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-}
-.large-btn:hover { box-shadow: 0 0 20px var(--primary); }
-
+.large-btn { background: linear-gradient(135deg, #8b0000, #ff4500); color: white; border: 1px solid var(--accent); }
 .secondary { background: #222; color: #ccc; border: 1px solid #444; }
-.secondary:hover { border-color: #fff; color: #fff; }
-
 .small-btn { width: auto; padding: 8px 15px; font-size: 0.9em; display: inline-block; }
 .danger { background: #300; border: 1px solid red; color: red; }
 
-.pulse-btn { animation: pulse 2s infinite; }
-
-/* --- RPG ELEMENTS --- */
-.rpg-card {
-    background: rgba(0,0,0,0.4);
-    border: 1px solid var(--accent);
-    padding: 20px; border-radius: 12px; margin: 20px 0;
-    text-align: left;
-}
-.level-header { display: flex; justify-content: space-between; align-items: baseline; }
-#rpg-rank { font-size: 2em; font-weight: bold; }
-.lvl-text { color: #888; }
-
-.level-progress {
-    background: #222; height: 12px; border-radius: 10px; margin: 10px 0; overflow: hidden; border: 1px solid #444;
-}
+.rpg-card { background: rgba(0,0,0,0.4); border: 1px solid var(--accent); padding: 20px; border-radius: 12px; margin: 20px 0; text-align: left; }
+.level-progress { background: #222; height: 12px; border-radius: 10px; margin: 10px 0; overflow: hidden; border: 1px solid #444; }
 .bar-fill { height: 100%; transition: width 1s ease; box-shadow: 0 0 15px currentColor; }
-.next-rank { text-align: right; font-size: 0.8em; color: #666; }
 
-/* --- ORBS --- */
 .stamp-container { display: flex; gap: 8px; justify-content: center; margin: 25px 0; }
-.orb {
-    width: 35px; height: 35px; border-radius: 50%;
-    background: #111; border: 2px solid #333;
-    position: relative;
-}
-.orb.filled {
-    background: radial-gradient(circle at 30% 30%, #ffd700, #ff4500);
-    border-color: gold;
-    box-shadow: 0 0 15px #ff4500;
-}
+.orb { width: 35px; height: 35px; border-radius: 50%; background: #111; border: 2px solid #333; }
+.orb.filled { background: radial-gradient(circle at 30% 30%, #ffd700, #ff4500); border-color: gold; box-shadow: 0 0 15px #ff4500; }
 
-/* --- LIST ITEMS --- */
 .cust-item {
-    background: linear-gradient(90deg, #111, #000);
-    border: 1px solid #333;
-    border-left: 3px solid var(--primary);
-    padding: 15px; margin: 10px 0;
-    border-radius: 8px; text-align: left;
+    background: linear-gradient(90deg, #111, #000); border: 1px solid #333; border-left: 3px solid var(--primary);
+    padding: 15px; margin: 10px 0; border-radius: 8px; text-align: left;
 }
 .cust-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
 .cust-name { font-weight: bold; color: white; font-size: 1.1em; }
 .cust-id { color: var(--accent); font-size: 0.9em; }
-.cust-rank { font-size: 0.8em; padding: 2px 6px; border-radius: 4px; border: 1px solid; }
 
-.action-row { display: flex; gap: 10px; margin-top: 10px; align-items: center; }
-.stamp-control { display: flex; gap: 5px; width: 100%; }
-
-/* --- MODAL --- */
-.modal {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.95); display: flex; justify-content: center; align-items: center; z-index: 2000;
-}
-.modal-content {
-    background: #000; border: 2px solid var(--accent);
-    padding: 20px; border-radius: 15px; width: 95%; max-width: 480px;
-    box-shadow: 0 0 50px var(--primary);
-}
+.modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: flex; justify-content: center; align-items: center; z-index: 2000; }
+.modal-content { background: #000; border: 2px solid var(--accent); padding: 20px; border-radius: 15px; width: 95%; max-width: 480px; box-shadow: 0 0 50px var(--primary); }
 canvas { width: 100%; height: auto; border-radius: 10px; box-shadow: 0 0 20px gold; }
-
-/* --- ANIMATIONS --- */
-@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 69, 0, 0.7); } 70% { box-shadow: 0 0 0 15px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
-
 .link-btn { color: var(--accent); text-decoration: none; display: block; margin-top: 20px; border: 1px dashed #444; padding: 10px; border-radius: 5px; }
