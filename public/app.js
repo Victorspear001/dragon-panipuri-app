@@ -1,7 +1,7 @@
 // --- CONFIGURATION ---
 const API_URL = '/api';
 
-// ⚠️ PASTE YOUR KEYS HERE
+// ⚠️ PASTE YOUR SUPABASE KEYS HERE
 const SUPABASE_URL = 'https://iszzxbakpuwjxhgjwrgi.supabase.co'; 
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlzenp4YmFrcHV3anhoZ2p3cmdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyNDE4MDcsImV4cCI6MjA3OTgxNzgwN30.NwWX_PUzLKsfw2UjT0SK7wCZyZnd9jtvggf6bAlD3V0'; 
 
@@ -13,7 +13,6 @@ if (typeof supabase !== 'undefined') {
 
 // --- NAVIGATION ---
 function goHome() {
-    // Only needed if using Single Page App approach for Admin
     if(document.getElementById('landing-page')) {
         hideAll();
         document.getElementById('landing-page').classList.remove('hidden');
@@ -33,6 +32,14 @@ function hideAll() {
         const el = document.getElementById(id);
         if(el) el.classList.add('hidden');
     });
+}
+function showSection(id) {
+    // Hide all auth sections
+    ['admin-login-sec', 'admin-register-sec', 'admin-forgot-sec'].forEach(sec => {
+        document.getElementById(sec).classList.add('hidden');
+    });
+    // Show target
+    document.getElementById(id).classList.remove('hidden');
 }
 
 // ==========================================
@@ -102,45 +109,90 @@ async function checkAdminSession() {
     if(!supabaseClient) return;
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (session) {
-        document.getElementById('admin-auth-sec').classList.add('hidden');
+        // Hide all auth forms, show dashboard
+        ['admin-login-sec', 'admin-register-sec', 'admin-forgot-sec'].forEach(sec => {
+            document.getElementById(sec).classList.add('hidden');
+        });
         document.getElementById('admin-dashboard').classList.remove('hidden');
         loadCustomers();
     } else {
-        document.getElementById('admin-auth-sec').classList.remove('hidden');
+        // Default show login
+        document.getElementById('admin-login-sec').classList.remove('hidden');
         document.getElementById('admin-dashboard').classList.add('hidden');
     }
 }
 
+// --- NEW REGISTER LOGIC ---
 async function adminSignUp() {
-    const email = document.getElementById('admin-email').value;
-    const password = document.getElementById('admin-pass').value;
-    const username = document.getElementById('admin-username').value;
+    const email = document.getElementById('reg-email').value;
+    const password = document.getElementById('reg-pass').value;
+    const username = document.getElementById('reg-username').value;
 
-    if (!email || !password || !username) return alert("Fill all fields (Email, Username, Pass)");
-    if (password.length < 6) return alert("Password too short");
+    if (!email || !password || !username) return alert("All fields are required.");
+    if (password.length < 6) return alert("Password must be at least 6 characters.");
 
-    // Pass Username in Metadata
-    const { data, error } = await supabaseClient.auth.signUp({ 
-        email, password,
-        options: { data: { username: username } }
-    });
+    // 1. Check if username exists in public table
+    const { data: existingUser } = await supabaseClient
+        .from('admin_profiles')
+        .select('username')
+        .eq('username', username)
+        .single();
 
-    if (error) alert("Error: " + error.message);
-    else { alert("Registered! Login now."); adminSignIn(); }
+    if(existingUser) return alert("Username already taken! Choose another.");
+
+    // 2. Register with Supabase Auth
+    const { data, error } = await supabaseClient.auth.signUp({ email, password });
+
+    if (error) {
+        alert("Registration Error: " + error.message);
+    } else {
+        // 3. Save mapping to public table
+        await supabaseClient.from('admin_profiles').insert([{ username: username, email: email }]);
+        
+        alert("Registration Successful! Please Login.");
+        showSection('admin-login-sec');
+    }
 }
 
+// --- NEW LOGIN LOGIC (Username -> Email) ---
 async function adminSignIn() {
-    const email = document.getElementById('admin-email').value;
-    const password = document.getElementById('admin-pass').value;
-    if (!email || !password) return alert("Enter credentials");
-    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-    if (error) alert("Login Failed: " + error.message);
+    const username = document.getElementById('login-username').value;
+    const password = document.getElementById('login-pass').value;
+
+    if (!username || !password) return alert("Enter Username and Password");
+
+    // 1. Find Email using Username
+    const { data, error: tableError } = await supabaseClient
+        .from('admin_profiles')
+        .select('email')
+        .eq('username', username)
+        .single();
+
+    if (tableError || !data) {
+        return alert("Username not found!");
+    }
+
+    // 2. Log in with the found Email
+    const { error: authError } = await supabaseClient.auth.signInWithPassword({ 
+        email: data.email, 
+        password: password 
+    });
+    
+    if (authError) alert("Login Failed: Incorrect Password");
     else checkAdminSession();
 }
 
 async function adminSignOut() {
     await supabaseClient.auth.signOut();
     checkAdminSession();
+}
+
+async function resetAdminPassword() {
+    const email = document.getElementById('forgot-email').value;
+    if(!email) return alert("Enter your email address");
+    const { data, error } = await supabaseClient.auth.resetPasswordForEmail(email);
+    if(error) alert(error.message);
+    else alert("Password reset link sent to " + email);
 }
 
 // --- ADMIN LIST ---
@@ -228,7 +280,6 @@ async function createCustomer() {
 }
 
 async function updateStamp(id, type) {
-    // Immediate UI update
     const c = customersList.find(x => x.customer_id === id);
     if(c) {
         if(type === 'add') { c.stamps++; if(!c.lifetime_stamps) c.lifetime_stamps=0; c.lifetime_stamps++; }
@@ -258,34 +309,28 @@ function generateIDCard(name, id) {
     document.getElementById('id-modal').classList.remove('hidden');
     const ctx = document.getElementById('cardCanvas').getContext('2d');
     
-    // Background: Dark Premium Gradient
+    // Background
     const grd = ctx.createLinearGradient(0,0,450,270);
     grd.addColorStop(0,"#2a0000"); grd.addColorStop(1,"#000");
     ctx.fillStyle = grd; ctx.fillRect(0,0,450,270);
     
-    // Gold Border
+    // Borders
     ctx.strokeStyle = "#ffd700"; ctx.lineWidth = 8; ctx.strokeRect(4,4,442,262);
     ctx.strokeStyle = "#ff4500"; ctx.lineWidth = 2; ctx.strokeRect(15,15,420,240);
 
     // Text
     ctx.textAlign = "center";
-    
-    // Header
     ctx.shadowColor = "red"; ctx.shadowBlur = 15;
     ctx.fillStyle = "#ffd700"; ctx.font = "bold 32px serif"; 
     ctx.fillText("RK DRAGON", 225, 60);
-    
     ctx.shadowBlur = 0;
     
-    // ID Number (Big)
     ctx.fillStyle = "white"; ctx.font = "bold 48px sans-serif"; 
     ctx.fillText(id, 225, 140);
     
-    // Name
     ctx.fillStyle = "#ffcc00"; ctx.font = "italic 24px serif"; 
     ctx.fillText(name.toUpperCase(), 225, 190);
     
-    // Footer
     ctx.fillStyle = "#aaa"; ctx.font = "14px sans-serif"; 
     ctx.fillText("LOYALTY MEMBER", 225, 230);
 }
@@ -312,5 +357,10 @@ function searchCustomers() {
     const filtered = customersList.filter(c => c.name.toLowerCase().includes(q) || c.customer_id.toLowerCase().includes(q));
     renderAdminList(filtered);
 }
-function exportCSV() { /* CSV Logic as before */ }
-function importCSV() { /* CSV Logic as before */ }
+function exportCSV() { 
+    if(customersList.length === 0) return alert("No data");
+    let csv = "data:text/csv;charset=utf-8,Name,Mobile,ID,Stamps,Lifetime\n" + 
+    customersList.map(r => `${r.name},${r.mobile},${r.customer_id},${r.stamps},${r.lifetime_stamps}`).join("\n");
+    const link = document.createElement("a"); link.href = encodeURI(csv); link.download = "data.csv"; link.click();
+}
+function importCSV() { document.getElementById('csv-input').files[0] && alert("Import Logic Ready"); }
