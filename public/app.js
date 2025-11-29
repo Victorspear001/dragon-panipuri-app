@@ -1,12 +1,16 @@
 // --- CONFIGURATION ---
 const API_URL = '/api';
 
-// ⚠️ REPLACE THESE WITH YOUR ACTUAL SUPABASE DETAILS
-const SUPABASE_URL = 'https://iszzxbakpuwjxhgjwrgi.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlzenp4YmFrcHV3anhoZ2p3cmdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyNDE4MDcsImV4cCI6MjA3OTgxNzgwN30.NwWX_PUzLKsfw2UjT0SK7wCZyZnd9jtvggf6bAlD3V0';
+// ==========================================
+// ⚠️ PASTE YOUR SUPABASE KEYS HERE ⚠️
+// ==========================================
+const SUPABASE_URL = 'https://iszzxbakpuwjxhgjwrgi.supabase.co'; 
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlzenp4YmFrcHV3anhoZ2p3cmdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyNDE4MDcsImV4cCI6MjA3OTgxNzgwN30.NwWX_PUzLKsfw2UjT0SK7wCZyZnd9jtvggf6bAlD3V0'; 
 
-// Initialize Supabase
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+// --- FIX: Correctly Initialize Supabase Client ---
+// The library loads as a global variable named 'supabase'
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 
 // --- NAVIGATION ---
 function goHome() {
@@ -31,23 +35,25 @@ function hideAll() {
 }
 
 // ==========================================
-// ⚔️ CUSTOMER PORTAL (RPG STATS)
+// ⚔️ CUSTOMER PORTAL
 // ==========================================
 
 async function customerLogin() {
     const id = document.getElementById('cust-login-id').value.trim();
     if(!id) return alert("Enter your Rune ID");
 
-    const res = await fetch(`${API_URL}/customer?action=login&id=${id}`);
-    const data = await res.json();
+    try {
+        const res = await fetch(`${API_URL}/customer?action=login&id=${id}`);
+        const data = await res.json();
 
-    if(res.ok && data.customer_id) {
-        document.getElementById('cust-login-sec').classList.add('hidden');
-        document.getElementById('cust-dashboard').classList.remove('hidden');
-        renderCustomerStats(data);
-    } else {
-        alert("ID not found in the archives.");
-    }
+        if(res.ok && data.customer_id) {
+            document.getElementById('cust-login-sec').classList.add('hidden');
+            document.getElementById('cust-dashboard').classList.remove('hidden');
+            renderCustomerStats(data);
+        } else {
+            alert("ID not found in the archives.");
+        }
+    } catch (e) { alert("Connection failed."); }
 }
 
 function calculateRank(total) {
@@ -64,7 +70,6 @@ function renderCustomerStats(c) {
     document.getElementById('display-cust-name').innerText = c.name;
     document.getElementById('lifetime-count').innerText = c.lifetime_stamps || 0;
     
-    // Calculate Rank
     const rankData = calculateRank(c.lifetime_stamps || 0);
 
     const rankEl = document.getElementById('rpg-rank');
@@ -77,7 +82,6 @@ function renderCustomerStats(c) {
     barEl.style.background = rankData.fill;
     barEl.style.boxShadow = `0 0 10px ${rankData.color}`;
 
-    // Stamps
     let html = '<div class="stamp-container">';
     for(let i=0; i<6; i++) {
         html += `<div class="orb ${i < c.stamps ? 'filled' : ''}"></div>`;
@@ -94,11 +98,11 @@ function renderCustomerStats(c) {
 }
 
 // ==========================================
-// 🛡️ ADMIN PORTAL (Supabase Auth)
+// 🛡️ ADMIN PORTAL (Auth Logic Fixed)
 // ==========================================
 
 async function checkAdminSession() {
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session } } = await supabaseClient.auth.getSession();
     if (session) {
         document.getElementById('admin-auth-sec').classList.add('hidden');
         document.getElementById('admin-dashboard').classList.remove('hidden');
@@ -109,15 +113,15 @@ async function checkAdminSession() {
     }
 }
 
-// --- FIXED REGISTRATION FUNCTION ---
 async function adminSignUp() {
     const email = document.getElementById('admin-email').value;
     const password = document.getElementById('admin-pass').value;
 
-    if (!email || !password) return alert("Please enter both Email and Password.");
-    if (password.length < 6) return alert("Password must be at least 6 characters.");
+    if (!email || !password) return alert("Please enter Email and Password");
+    if (password.length < 6) return alert("Password must be at least 6 characters");
 
-    const { data, error } = await supabase.auth.signUp({ 
+    // Attempt Registration
+    const { data, error } = await supabaseClient.auth.signUp({ 
         email: email, 
         password: password 
     });
@@ -125,8 +129,8 @@ async function adminSignUp() {
     if (error) {
         alert("Registration Failed: " + error.message);
     } else {
-        alert("Registration Successful! You can now log in.");
-        // Attempt auto-login after register
+        alert("Success! If you disabled 'Confirm Email' in Supabase, login now.");
+        // Try auto-login
         adminSignIn();
     }
 }
@@ -137,7 +141,7 @@ async function adminSignIn() {
 
     if (!email || !password) return alert("Enter email and password");
 
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
     
     if (error) {
         alert("Login Failed: " + error.message);
@@ -147,16 +151,16 @@ async function adminSignIn() {
 }
 
 async function adminSignOut() {
-    await supabase.auth.signOut();
+    await supabaseClient.auth.signOut();
     checkAdminSession();
 }
 
 async function resetAdminPassword() {
     const email = document.getElementById('admin-email').value;
     if(!email) return alert("Enter email first");
-    const { data, error } = await supabase.auth.resetPasswordForEmail(email);
+    const { data, error } = await supabaseClient.auth.resetPasswordForEmail(email);
     if(error) alert(error.message);
-    else alert("Password reset scroll sent to your email!");
+    else alert("Password reset link sent to your email.");
 }
 
 // --- ADMIN DASHBOARD ---
@@ -262,10 +266,7 @@ async function updateStamp(id, type) {
 }
 
 async function deleteCustomer(id) {
-    // SECURITY UPDATE: We removed the backend check for old admin table. 
-    // Now we rely on frontend session. 
     if(!confirm("Permanently Delete?")) return;
-    
     await fetch(`${API_URL}/customer`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
@@ -298,7 +299,7 @@ function downloadID() {
 }
 
 function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-// Helper for Import/Export not shown to save space, but UI buttons exist
+// Helper for Import/Export
 function exportCSV() { 
     if(customersList.length === 0) return alert("No data");
     let csv = "data:text/csv;charset=utf-8,Name,Mobile,ID,Stamps,Lifetime\n" + 
