@@ -31,25 +31,38 @@
             <h1>WARLORD ACCESS</h1>
         </header>
 
-        <section id="admin-auth-sec">
+        <section id="admin-login-sec">
             <div class="input-group">
-                <input type="email" id="admin-email" placeholder="Admin Email">
-                <input type="text" id="admin-username" placeholder="Username (For Registration Only)">
-                <input type="password" id="admin-pass" placeholder="Password">
+                <input type="text" id="login-username" placeholder="Admin Username">
+                <input type="password" id="login-pass" placeholder="Password">
             </div>
-            
             <button onclick="adminSignIn()" class="large-btn">Login</button>
             
             <div class="auth-actions">
-                <button onclick="adminSignUp()" class="secondary small-btn">Register New</button>
-                <button onclick="resetAdminPassword()" class="secondary small-btn">Forgot Pass?</button>
+                <button onclick="showSection('admin-register-sec')" class="secondary small-btn">Register New</button>
+                <button onclick="showSection('admin-forgot-sec')" class="secondary small-btn">Forgot Pass?</button>
             </div>
-
-            <div class="divider">
-                <span>OR</span>
-            </div>
-            
+            <div class="divider"><span>OR</span></div>
             <a href="customer.html" class="link-btn">Go to Customer Portal &rarr;</a>
+        </section>
+
+        <section id="admin-register-sec" class="hidden">
+            <h3>New Warlord Registration</h3>
+            <input type="text" id="reg-username" placeholder="Choose a Username">
+            <input type="email" id="reg-email" placeholder="Your Email Address">
+            <input type="password" id="reg-pass" placeholder="Create Password">
+            
+            <button onclick="adminSignUp()" class="large-btn">Register</button>
+            <button onclick="showSection('admin-login-sec')" class="secondary">Back to Login</button>
+        </section>
+
+        <section id="admin-forgot-sec" class="hidden">
+            <h3>Recover Access</h3>
+            <p style="font-size:0.9em; color:#aaa;">Enter your email to receive a password reset scroll.</p>
+            <input type="email" id="forgot-email" placeholder="Your Email Address">
+            
+            <button onclick="resetAdminPassword()" class="large-btn">Send Reset Link</button>
+            <button onclick="showSection('admin-login-sec')" class="secondary">Back to Login</button>
         </section>
 
         <section id="admin-dashboard" class="hidden">
