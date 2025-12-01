@@ -1,22 +1,63 @@
 // --- CONFIGURATION ---
 const API_URL = '/api';
 
-// ⚠️ PASTE YOUR KEYS HERE
+// ⚠️ PASTE KEYS HERE
 const SUPABASE_URL = 'https://iszzxbakpuwjxhgjwrgi.supabase.co'; 
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlzenp4YmFrcHV3anhoZ2p3cmdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyNDE4MDcsImV4cCI6MjA3OTgxNzgwN30.NwWX_PUzLKsfw2UjT0SK7wCZyZnd9jtvggf6bAlD3V0'; 
 
 let supabaseClient = null;
 if (typeof supabase !== 'undefined') {
     supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    
+    // AUTH STATE LISTENER (Handles Password Recovery Redirect)
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+        if (event === 'PASSWORD_RECOVERY') {
+            // User clicked reset link, show Update Password Screen
+            showSection('admin-update-pass-sec');
+        } else if (event === 'SIGNED_IN' && document.getElementById('admin-portal')) {
+            // Normal login
+            showSection('admin-dashboard');
+            loadCustomers();
+        }
+    });
 }
 
 // --- UTILS ---
 function showSection(id) {
-    ['admin-login-sec', 'admin-register-sec', 'admin-forgot-sec'].forEach(sid => {
+    const ids = ['admin-login-sec', 'admin-register-sec', 'admin-forgot-sec', 'admin-update-pass-sec', 'admin-dashboard'];
+    ids.forEach(sid => {
         const el = document.getElementById(sid);
         if(el) el.classList.add('hidden');
     });
     document.getElementById(id).classList.remove('hidden');
+}
+
+// --- SVG BADGE GENERATOR ---
+function getRankSVG(rankName) {
+    const colors = {
+        "BRONZE": ["#cd7f32", "#8b4513"],
+        "SILVER": ["#e0e0e0", "#808080"],
+        "GOLD": ["#ffd700", "#daa520"],
+        "CRYSTAL": ["#00ffff", "#008b8b"],
+        "MASTER": ["#dc143c", "#800000"],
+        "CHAMPION": ["#ff4500", "#8b0000"],
+        "TITAN": ["#e6e6fa", "#483d8b"]
+    };
+    const c = colors[rankName.split(' ')[0]] || ["#fff", "#000"];
+    
+    // Generic Shield Shape with dynamic colors
+    return `
+    <svg viewBox="0 0 100 100" fill="none">
+        <defs>
+            <linearGradient id="grad_${rankName}" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:${c[0]};stop-opacity:1" />
+                <stop offset="100%" style="stop-color:${c[1]};stop-opacity:1" />
+            </linearGradient>
+        </defs>
+        <path d="M50 5 L90 20 V50 Q90 80 50 95 Q10 80 10 50 V20 Z" fill="url(#grad_${rankName})" stroke="${c[0]}" stroke-width="2"/>
+        <path d="M50 5 V95" stroke="rgba(0,0,0,0.3)" stroke-width="1"/>
+        <circle cx="50" cy="40" r="15" fill="rgba(255,255,255,0.2)"/>
+    </svg>`;
 }
 
 // ==========================================
@@ -40,13 +81,13 @@ async function customerLogin() {
 }
 
 function calculateRank(total) {
-    if (total > 30) return { name: "TITAN", color: "#e6e6fa", fill: "#e6e6fa", pct: 100, next: "Max" };
-    if (total > 25) return { name: "CHAMPION", color: "#ff4500", fill: "#ff4500", pct: (total/30)*100, next: "Titan" };
-    if (total > 20) return { name: "MASTER", color: "#dc143c", fill: "#dc143c", pct: (total/25)*100, next: "Champion" };
-    if (total > 15) return { name: "CRYSTAL", color: "#00ffff", fill: "#00ffff", pct: (total/20)*100, next: "Master" };
-    if (total > 10) return { name: "GOLD", color: "#ffd700", fill: "#ffd700", pct: (total/15)*100, next: "Crystal" };
-    if (total > 5)  return { name: "SILVER", color: "#c0c0c0", fill: "#c0c0c0", pct: (total/10)*100, next: "Gold" };
-    return { name: "BRONZE", color: "#cd7f32", fill: "#cd7f32", pct: (total/5)*100, next: "Silver" };
+    if (total > 30) return { name: "TITAN", color: "#e6e6fa", pct: 100, next: "Max" };
+    if (total > 25) return { name: "CHAMPION", color: "#ff4500", pct: (total/30)*100, next: "Titan" };
+    if (total > 20) return { name: "MASTER", color: "#dc143c", pct: (total/25)*100, next: "Champion" };
+    if (total > 15) return { name: "CRYSTAL", color: "#00ffff", pct: (total/20)*100, next: "Master" };
+    if (total > 10) return { name: "GOLD", color: "#ffd700", pct: (total/15)*100, next: "Crystal" };
+    if (total > 5)  return { name: "SILVER", color: "#c0c0c0", pct: (total/10)*100, next: "Gold" };
+    return { name: "BRONZE", color: "#cd7f32", pct: (total/5)*100, next: "Silver" };
 }
 
 function renderCustomerStats(c) {
@@ -57,11 +98,15 @@ function renderCustomerStats(c) {
     rankEl.innerText = rankData.name;
     rankEl.style.color = rankData.color;
     
-    document.getElementById('next-rank-name').innerText = rankData.next;
+    // Inject SVG
+    const badgeEl = document.getElementById('rank-badge-display');
+    if(badgeEl) badgeEl.innerHTML = getRankSVG(rankData.name);
 
+    document.getElementById('next-rank-name').innerText = rankData.next;
     const barEl = document.getElementById('xp-bar');
     barEl.style.width = Math.min(rankData.pct, 100) + "%";
-    barEl.style.background = rankData.fill;
+    barEl.style.background = rankData.color;
+    barEl.style.boxShadow = `0 0 10px ${rankData.color}`;
 
     let html = '<div class="stamp-container">';
     for(let i=0; i<6; i++) html += `<div class="orb ${i < c.stamps ? 'filled' : ''}"></div>`;
@@ -69,44 +114,28 @@ function renderCustomerStats(c) {
     document.getElementById('cust-stamps-display').innerHTML = html;
     
     const msg = c.stamps >= 6 ? "🎉 REWARD UNLOCKED!" : `Collect ${6 - c.stamps} more.`;
-    const msgEl = document.getElementById('cust-status-msg');
-    msgEl.innerText = msg;
-    msgEl.style.color = c.stamps >= 6 ? "#0f0" : "#aaa";
+    document.getElementById('cust-status-msg').innerText = msg;
+    document.getElementById('cust-status-msg').style.color = c.stamps >= 6 ? "#0f0" : "#aaa";
 }
 
 // ==========================================
-// 🛡️ ADMIN AUTH
+// 🛡️ ADMIN AUTH & PASSWORD UPDATE
 // ==========================================
-async function checkAdminSession() {
-    if(!supabaseClient) return;
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (session) {
-        showSection('admin-dashboard'); // Actually shows dashboard, hides login forms
-        document.getElementById('admin-dashboard').classList.remove('hidden');
-        loadCustomers();
-    } else {
-        showSection('admin-login-sec');
-        document.getElementById('admin-dashboard').classList.add('hidden');
-    }
-}
 
 async function adminSignUp() {
     const email = document.getElementById('reg-email').value;
     const password = document.getElementById('reg-pass').value;
     const username = document.getElementById('reg-username').value;
-    if (!email || !password || !username) return alert("All fields required");
+    if (!email || !password || !username) return alert("Fill all fields");
     
-    // 1. Check Username
     const { data: existing } = await supabaseClient.from('admin_profiles').select('username').eq('username', username).single();
     if(existing) return alert("Username taken");
 
-    // 2. Register
     const { error } = await supabaseClient.auth.signUp({ email, password });
-    if (error) return alert("Error: " + error.message);
+    if (error) return alert(error.message);
 
-    // 3. Map Username
     await supabaseClient.from('admin_profiles').insert([{ username, email }]);
-    alert("Success! Login now.");
+    alert("Registered! Login now.");
     showSection('admin-login-sec');
 }
 
@@ -115,39 +144,50 @@ async function adminSignIn() {
     const password = document.getElementById('login-pass').value;
     if (!username || !password) return alert("Enter credentials");
 
-    // 1. Get Email
     const { data } = await supabaseClient.from('admin_profiles').select('email').eq('username', username).single();
     if (!data) return alert("Username not found");
 
-    // 2. Login
     const { error } = await supabaseClient.auth.signInWithPassword({ email: data.email, password });
     if (error) alert("Incorrect Password");
-    else checkAdminSession();
+    // Session listener handles the redirect
 }
 
 async function adminSignOut() {
     await supabaseClient.auth.signOut();
-    checkAdminSession();
+    showSection('admin-login-sec');
 }
 
 async function resetAdminPassword() {
     const email = document.getElementById('forgot-email').value;
     if(!email) return alert("Enter email");
     
-    // SEND LINK pointing to the secure dashboard
     const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
         redirectTo: window.location.origin + '/dashboard_secure.html',
     });
-    
     if(error) alert(error.message);
-    else alert("Reset link sent to " + email);
+    else alert("Check your email for the reset link.");
 }
 
-// --- ADMIN LIST ---
+async function updateAdminPassword() {
+    const newPass = document.getElementById('new-password').value;
+    if(newPass.length < 6) return alert("Password too short");
+
+    const { error } = await supabaseClient.auth.updateUser({ password: newPass });
+    
+    if (error) {
+        alert("Error updating password: " + error.message);
+    } else {
+        alert("Password Updated Successfully! Please login.");
+        adminSignOut(); // Force re-login
+    }
+}
+
+// --- ADMIN DASHBOARD ---
 let customersList = [];
 async function loadCustomers() {
     const el = document.getElementById('customer-list');
-    el.innerHTML = '<div style="color:#888;">Summoning...</div>';
+    if(!el) return;
+    el.innerHTML = '<div style="color:#888;">Summoning data...</div>';
     const res = await fetch(`${API_URL}/customer?action=list`);
     customersList = await res.json();
     renderAdminList(customersList);
@@ -155,12 +195,13 @@ async function loadCustomers() {
 
 function renderAdminList(data) {
     const el = document.getElementById('customer-list');
+    if(!el) return;
     el.innerHTML = "";
+    
     data.forEach(c => {
         const rank = calculateRank(c.lifetime_stamps || 0);
         let btns = '';
 
-        // 6th Stamp: Show REDEEM + REMOVE (Undo)
         if(c.stamps >= 6) {
             btns = `
             <div class="stamp-control">
@@ -178,18 +219,23 @@ function renderAdminList(data) {
         const div = document.createElement('div');
         div.className = 'cust-item';
         div.innerHTML = `
+            <div class="cust-rank-badge">${getRankSVG(rank.name)}</div>
             <div class="cust-header">
                 <div>
                     <div class="cust-name">${c.name}</div>
                     <div class="cust-id">${c.customer_id}</div>
                 </div>
-                <div style="font-size:0.8em; color:${rank.color}; border:1px solid ${rank.color}; padding:2px 5px; border-radius:4px;">${rank.name}</div>
+            </div>
+            <div style="font-size:0.8em; color:#888; margin-bottom:10px;">
+                Mobile: ${c.mobile} | Lvl: <span style="color:${rank.color}">${rank.name}</span> (${c.lifetime_stamps||0})
             </div>
             
             <div class="stamp-container" style="justify-content:flex-start; margin: 10px 0;">
                 ${getOrbHTML(c.stamps)}
             </div>
+            
             ${btns}
+
             <div class="action-row" style="margin-top:10px;">
                 <button class="secondary small-btn" onclick="generateIDCard('${c.name}', '${c.customer_id}')">ID Card</button>
                 <button class="secondary small-btn danger" onclick="deleteCustomer('${c.customer_id}')">Delete</button>
@@ -205,20 +251,14 @@ function getOrbHTML(count) {
     return html;
 }
 
-// --- ACTIONS ---
+// --- ACTIONS & HELPERS ---
 async function createCustomer() {
     const name = document.getElementById('new-name').value;
     const mobile = document.getElementById('new-mobile').value;
-    const res = await fetch(`${API_URL}/customer`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({action: 'add', name, mobile})
-    });
+    const res = await fetch(`${API_URL}/customer`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'add', name, mobile}) });
     const data = await res.json();
-    if(res.ok) { generateIDCard(name, data.customerId); loadCustomers(); }
-    else alert(data.error);
+    if(res.ok) { generateIDCard(name, data.customerId); loadCustomers(); } else alert(data.error);
 }
-
 async function updateStamp(id, type) {
     const c = customersList.find(x => x.customer_id === id);
     if(c) {
@@ -227,59 +267,39 @@ async function updateStamp(id, type) {
         if(type === 'reset') c.stamps = 0;
         renderAdminList(customersList);
     }
-    await fetch(`${API_URL}/customer`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({action: 'stamp', id, type})
-    });
+    await fetch(`${API_URL}/customer`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'stamp', id, type}) });
 }
-
 async function deleteCustomer(id) {
-    if(!confirm("Delete?")) return;
-    await fetch(`${API_URL}/customer`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({action: 'delete', id})
-    });
+    if(!confirm("Permanently Delete?")) return;
+    await fetch(`${API_URL}/customer`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'delete', id}) });
     loadCustomers();
 }
-
-// --- ID CARD ---
 function generateIDCard(name, id) {
     document.getElementById('id-modal').classList.remove('hidden');
     const ctx = document.getElementById('cardCanvas').getContext('2d');
-    // Card drawing logic same as before...
     const grd = ctx.createLinearGradient(0,0,450,270);
     grd.addColorStop(0,"#300"); grd.addColorStop(1,"#000");
     ctx.fillStyle = grd; ctx.fillRect(0,0,450,270);
     ctx.strokeStyle = "gold"; ctx.lineWidth = 6; ctx.strokeRect(5,5,440,260);
-    
     ctx.textAlign = "center";
     ctx.fillStyle = "gold"; ctx.font = "bold 30px serif"; ctx.fillText("RK DRAGON", 225, 50);
     ctx.fillStyle = "white"; ctx.font = "bold 45px sans-serif"; ctx.fillText(id, 225, 130);
     ctx.fillStyle = "#fa0"; ctx.font = "italic 24px serif"; ctx.fillText(name, 225, 180);
 }
-
 function downloadID() {
-    const link = document.createElement('a');
-    link.download = 'RK_Card.jpg';
-    link.href = document.getElementById('cardCanvas').toDataURL();
-    link.click();
+    const link = document.createElement('a'); link.download = 'RK_Card.jpg';
+    link.href = document.getElementById('cardCanvas').toDataURL(); link.click();
 }
-
 function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 function showAdminTab(tab) {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    event.target.classList.add('active');
-    document.getElementById('adm-add-sec').classList.add('hidden');
-    document.getElementById('adm-list-sec').classList.add('hidden');
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); event.target.classList.add('active');
+    document.getElementById('adm-add-sec').classList.add('hidden'); document.getElementById('adm-list-sec').classList.add('hidden');
     if(tab === 'add') document.getElementById('adm-add-sec').classList.remove('hidden');
     if(tab === 'list') { document.getElementById('adm-list-sec').classList.remove('hidden'); loadCustomers(); }
 }
 function searchCustomers() {
     const q = document.getElementById('search-input').value.toLowerCase();
-    const filtered = customersList.filter(c => c.name.toLowerCase().includes(q) || c.customer_id.toLowerCase().includes(q));
-    renderAdminList(filtered);
+    renderAdminList(customersList.filter(c => c.name.toLowerCase().includes(q) || c.customer_id.toLowerCase().includes(q)));
 }
-function exportCSV() { /* CSV code */ }
-function importCSV() { /* CSV code */ }
+function exportCSV() { /* CSV */ }
+function importCSV() { /* CSV */ }
