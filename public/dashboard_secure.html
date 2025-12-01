@@ -3,32 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dragon Command</title>
+    <title>Warlord Access</title>
     <meta name="theme-color" content="#8a0303">
-    <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-    <button onclick="goHome()" class="home-icon" title="Back to Home">🏠</button>
+    <button onclick="window.location.href='index.html'" class="home-icon" title="Go to Customer View">🏠</button>
 
-    <div id="landing-page" class="container glass-panel">
+    <div class="container glass-panel">
         <header>
-            <div class="logo-glow">🐲</div>
-            <h1>RK DRAGON</h1>
-            <p class="subtitle">Loyalty & Rewards System</p>
-        </header>
-        <div class="split-menu">
-            <button onclick="goToCustomerLogin()" class="large-btn pulse-btn">I am a Customer</button>
-            <button onclick="goToAdminLogin()" class="secondary">I am the Admin</button>
-        </div>
-    </div>
-
-    <div id="admin-portal" class="container glass-panel hidden">
-        <header>
-            <h1>WARLORD ACCESS</h1>
+            <h1>WARLORD COMMAND</h1>
         </header>
 
         <section id="admin-login-sec">
@@ -42,32 +29,28 @@
                 <button onclick="showSection('admin-register-sec')" class="secondary small-btn">Register New</button>
                 <button onclick="showSection('admin-forgot-sec')" class="secondary small-btn">Forgot Pass?</button>
             </div>
-            <div class="divider"><span>OR</span></div>
-            <a href="customer.html" class="link-btn">Go to Customer Portal &rarr;</a>
         </section>
 
         <section id="admin-register-sec" class="hidden">
             <h3>New Warlord Registration</h3>
-            <input type="text" id="reg-username" placeholder="Choose a Username">
-            <input type="email" id="reg-email" placeholder="Your Email Address">
+            <input type="text" id="reg-username" placeholder="Choose Username">
+            <input type="email" id="reg-email" placeholder="Your Email (For Recovery)">
             <input type="password" id="reg-pass" placeholder="Create Password">
-            
             <button onclick="adminSignUp()" class="large-btn">Register</button>
-            <button onclick="showSection('admin-login-sec')" class="secondary">Back to Login</button>
+            <button onclick="showSection('admin-login-sec')" class="secondary">Back</button>
         </section>
 
         <section id="admin-forgot-sec" class="hidden">
             <h3>Recover Access</h3>
-            <p style="font-size:0.9em; color:#aaa;">Enter your email to receive a password reset scroll.</p>
-            <input type="email" id="forgot-email" placeholder="Your Email Address">
-            
+            <p style="font-size:0.9em; color:#ccc; margin-bottom:10px;">Enter your registered email.</p>
+            <input type="email" id="forgot-email" placeholder="Email Address">
             <button onclick="resetAdminPassword()" class="large-btn">Send Reset Link</button>
-            <button onclick="showSection('admin-login-sec')" class="secondary">Back to Login</button>
+            <button onclick="showSection('admin-login-sec')" class="secondary">Back</button>
         </section>
 
         <section id="admin-dashboard" class="hidden">
             <div class="toolbar">
-                <button onclick="showAdminTab('add')" class="tab-btn active">Add New</button>
+                <button onclick="showAdminTab('add')" class="tab-btn active">Add</button>
                 <button onclick="showAdminTab('list')" class="tab-btn">List</button>
                 <button onclick="adminSignOut()" class="tab-btn danger">Logout</button>
             </div>
@@ -81,12 +64,12 @@
 
             <div id="adm-list-sec" class="hidden">
                 <div class="tools-panel">
-                    <button onclick="exportCSV()" class="small-btn">⬇ Export CSV</button>
-                    <button onclick="document.getElementById('csv-input').click()" class="small-btn">⬆ Import CSV</button>
+                    <button onclick="exportCSV()" class="small-btn">⬇ Export</button>
+                    <button onclick="document.getElementById('csv-input').click()" class="small-btn">⬆ Import</button>
                     <input type="file" id="csv-input" accept=".csv" class="hidden" onchange="importCSV()">
                 </div>
                 <div class="search-container">
-                    <input type="text" id="search-input" placeholder="🔍 Search Name/ID..." onkeyup="searchCustomers()">
+                    <input type="text" id="search-input" placeholder="🔍 Search..." onkeyup="searchCustomers()">
                 </div>
                 <div id="customer-list">Loading scrolls...</div>
             </div>
@@ -106,5 +89,11 @@
     </div>
 
     <script src="app.js"></script>
+    <script>
+        // Auto-run admin check only on this page
+        document.addEventListener('DOMContentLoaded', () => {
+            if(typeof supabase !== 'undefined') checkAdminSession();
+        });
+    </script>
 </body>
 </html>
