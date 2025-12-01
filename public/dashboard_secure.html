@@ -15,20 +15,9 @@
 
     <div class="container glass-panel">
         <header>
-            <div class="dragon-logo-svg">
-                <!-- Inline SVG Dragon Logo -->
-                <svg viewBox="0 0 100 100" fill="none" stroke="gold" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M50 20 Q70 5 80 30 T90 60 Q80 90 50 95 Q20 90 10 60 T20 30 Q30 5 50 20 Z" fill="#200" />
-                    <path d="M50 20 Q50 60 50 95" stroke="#f00" stroke-width="1" />
-                    <circle cx="35" cy="45" r="3" fill="gold" />
-                    <circle cx="65" cy="45" r="3" fill="gold" />
-                    <path d="M40 70 Q50 80 60 70" stroke="gold" />
-                </svg>
-            </div>
             <h1>WARLORD COMMAND</h1>
         </header>
 
-        <!-- LOGIN -->
         <section id="admin-login-sec">
             <div class="input-group">
                 <input type="text" id="login-username" placeholder="Admin Username">
@@ -41,7 +30,6 @@
             </div>
         </section>
 
-        <!-- REGISTER -->
         <section id="admin-register-sec" class="hidden">
             <h3>New Registration</h3>
             <input type="text" id="reg-username" placeholder="Choose Username">
@@ -51,24 +39,19 @@
             <button onclick="showSection('admin-login-sec')" class="secondary">Back</button>
         </section>
 
-        <!-- FORGOT PASSWORD START -->
         <section id="admin-forgot-sec" class="hidden">
             <h3>Recover Access</h3>
-            <p style="color:#ccc; font-size:0.9em; margin-bottom:10px;">Enter your email to receive the reset scroll.</p>
             <input type="email" id="forgot-email" placeholder="Email Address">
             <button onclick="resetAdminPassword()" class="large-btn">Send Link</button>
             <button onclick="showSection('admin-login-sec')" class="secondary">Back</button>
         </section>
 
-        <!-- NEW PASSWORD (Shown after clicking email link) -->
         <section id="admin-update-pass-sec" class="hidden">
             <h3 style="color:gold;">Set New Password</h3>
-            <p style="color:#fff;">Enter your new secret code below.</p>
             <input type="password" id="new-password" placeholder="New Password">
             <button onclick="updateAdminPassword()" class="large-btn pulse-btn">Update Password</button>
         </section>
 
-        <!-- DASHBOARD -->
         <section id="admin-dashboard" class="hidden">
             <div class="toolbar">
                 <button onclick="showAdminTab('add')" class="tab-btn active">Add</button>
@@ -97,7 +80,6 @@
         </section>
     </div>
 
-    <!-- ID MODAL -->
     <div id="id-modal" class="modal hidden">
         <div class="modal-content">
             <h3>Identity Rune</h3>
@@ -111,5 +93,15 @@
     </div>
 
     <script src="app.js"></script>
+    <script>
+        // Check session specifically for this page
+        if(typeof supabase !== 'undefined') {
+            const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            client.auth.onAuthStateChange((event, session) => {
+                if(event === 'SIGNED_IN') showSection('admin-dashboard');
+                if(event === 'PASSWORD_RECOVERY') showSection('admin-update-pass-sec');
+            });
+        }
+    </script>
 </body>
 </html>
