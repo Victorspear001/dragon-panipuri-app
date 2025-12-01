@@ -15,6 +15,7 @@
 
     <div class="container glass-panel">
         <header>
+            <div class="logo-glow">⚔️</div>
             <h1>WARLORD COMMAND</h1>
         </header>
 
@@ -24,8 +25,9 @@
                 <input type="password" id="login-pass" placeholder="Password">
             </div>
             <button onclick="adminSignIn()" class="large-btn">Login</button>
+            
             <div class="auth-actions">
-                <button onclick="showSection('admin-register-sec')" class="secondary small-btn">Register</button>
+                <button onclick="showSection('admin-register-sec')" class="secondary small-btn">Register New</button>
                 <button onclick="showSection('admin-forgot-sec')" class="secondary small-btn">Forgot Pass?</button>
             </div>
         </section>
@@ -41,6 +43,7 @@
 
         <section id="admin-forgot-sec" class="hidden">
             <h3>Recover Access</h3>
+            <p style="color:#ccc; font-size:0.9em; margin-bottom:10px;">Enter your email to receive the reset scroll.</p>
             <input type="email" id="forgot-email" placeholder="Email Address">
             <button onclick="resetAdminPassword()" class="large-btn">Send Link</button>
             <button onclick="showSection('admin-login-sec')" class="secondary">Back</button>
@@ -49,7 +52,7 @@
         <section id="admin-update-pass-sec" class="hidden">
             <h3 style="color:gold;">Set New Password</h3>
             <input type="password" id="new-password" placeholder="New Password">
-            <button onclick="updateAdminPassword()" class="large-btn pulse-btn">Update Password</button>
+            <button onclick="updateAdminPassword()" class="large-btn pulse-btn">Update</button>
         </section>
 
         <section id="admin-dashboard" class="hidden">
