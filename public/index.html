@@ -3,17 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RK Dragon Stats</title>
+    <title>RK Dragon Loyalty</title>
     <meta name="theme-color" content="#8a0303">
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
     <div class="container glass-panel">
         <header>
-            <div class="logo-glow" onclick="secretAdminAccess()" style="cursor:pointer;">🐲</div>
+            <div class="logo-glow" onclick="secretAdminAccess()" style="cursor:pointer; user-select:none;">🐲</div>
             <h1>CUSTOMER GRIMOIRE</h1>
             <p class="subtitle">Check Your Rank</p>
         </header>
@@ -28,9 +29,7 @@
             <h2 id="display-cust-name" class="glow-text">Warrior</h2>
             
             <div class="rpg-card">
-                <div class="badge-container" id="rank-badge-display">
-                    <!-- SVG Badge Injected Here -->
-                </div>
+                <div class="badge-container" id="rank-badge-display"></div>
                 <div class="level-header">
                     <span id="rpg-rank">Bronze</span>
                     <span class="lvl-text">Lvl: <span id="lifetime-count">0</span></span>
@@ -53,11 +52,21 @@
     </div>
 
     <script src="app.js"></script>
+    
     <script>
-        let tapCount = 0, tapTimer = null;
+        let tapCount = 0;
+        let tapTimer = null;
         function secretAdminAccess() {
-            tapCount++; clearTimeout(tapTimer); tapTimer = setTimeout(() => { tapCount = 0; }, 1000);
-            if (tapCount === 5) { document.body.style.background = "gold"; setTimeout(() => { window.location.href = 'dashboard_secure.html'; }, 300); }
+            tapCount++;
+            clearTimeout(tapTimer);
+            tapTimer = setTimeout(() => { tapCount = 0; }, 1000); // Reset if too slow
+            
+            if (tapCount === 5) {
+                document.body.style.background = "gold"; // Visual feedback
+                setTimeout(() => {
+                    window.location.href = 'dashboard_secure.html'; // Redirect to Admin
+                }, 300);
+            }
         }
     </script>
 </body>
