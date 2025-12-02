@@ -5,7 +5,6 @@ const pool = new Pool({
 });
 
 module.exports = async function (req, res) {
-  // 1. LIST & LOGIN
   if (req.method === 'GET') {
     try {
         if (req.query.action === 'login') {
@@ -21,14 +20,12 @@ module.exports = async function (req, res) {
   const { action, name, mobile, id, type, data } = req.body;
 
   try {
-    // 2. ADD CUSTOMER
     if (action === 'add') {
       const custId = `RK${Math.floor(1000 + Math.random() * 9000)}`;
       await pool.query('INSERT INTO customers (name, mobile, customer_id, lifetime_stamps) VALUES ($1, $2, $3, 0)', [name, mobile, custId]);
       return res.status(200).json({ customerId: custId });
     }
 
-    // 3. STAMPS
     if (action === 'stamp') {
       if (type === 'reset') {
         await pool.query('UPDATE customers SET stamps = 0 WHERE customer_id = $1', [id]);
@@ -42,18 +39,14 @@ module.exports = async function (req, res) {
       return res.status(200).json({ message: 'Updated' });
     }
 
-    // 4. DELETE
     if (action === 'delete') {
       await pool.query('DELETE FROM customers WHERE customer_id = $1', [id]);
       return res.status(200).json({ message: 'Deleted' });
     }
     
-    // 5. IMPORT BATCH (CRITICAL UPDATE)
+    // --- BATCH IMPORT LOGIC ---
     if (action === 'import' && Array.isArray(data)) {
-        // We iterate and insert. 
-        // Note: For huge scale, a single bulk INSERT query is better, but loop is safer for simple implementation.
         for (const c of data) {
-            // "ON CONFLICT" prevents crashes on duplicate IDs
             await pool.query(
                 `INSERT INTO customers (name, mobile, customer_id, stamps, lifetime_stamps) 
                  VALUES ($1, $2, $3, $4, $5)
