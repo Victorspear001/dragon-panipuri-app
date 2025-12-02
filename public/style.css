@@ -1,23 +1,13 @@
 :root {
-    --primary: #ff4500;   
-    --accent: #ffd700;    
-    --panel: rgba(15, 15, 15, 0.9);
-    --border: rgba(255, 69, 0, 0.4);
+    --primary: #ff4500; --accent: #ffd700; --panel: rgba(15, 15, 15, 0.95); --border: rgba(255, 69, 0, 0.4);
 }
-
 * { box-sizing: border-box; }
-
 body {
-    background-color: black;
-    color: white;
-    font-family: 'Roboto', sans-serif;
-    text-align: center;
-    margin: 0; padding: 20px 10px;
+    background-color: black; color: white; font-family: 'Roboto', sans-serif;
+    text-align: center; margin: 0; padding: 20px 10px;
     background-image: radial-gradient(circle at 50% 50%, #2a0000 0%, #000 90%);
     min-height: 100vh;
 }
-
-/* HOME ICON */
 .home-icon {
     position: fixed; top: 15px; left: 15px; width: 45px; height: 45px;
     background: rgba(0,0,0,0.8); border: 1px solid var(--accent); border-radius: 50%;
@@ -25,8 +15,6 @@ body {
     cursor: pointer; z-index: 1000; transition: 0.3s;
 }
 .home-icon:hover { transform: scale(1.1); background: var(--primary); }
-
-/* GLASS PANEL */
 .glass-panel {
     background: var(--panel); backdrop-filter: blur(10px);
     border: 1px solid var(--border); border-radius: 20px;
@@ -34,20 +22,13 @@ body {
     box-shadow: 0 0 30px rgba(138, 3, 3, 0.4);
 }
 .hidden { display: none !important; }
-
-/* TYPOGRAPHY */
 h1, h2, h3 { font-family: 'Cinzel', serif; color: var(--accent); text-shadow: 2px 2px #500; margin: 10px 0; }
 .logo-glow { font-size: 3.5em; text-shadow: 0 0 20px var(--primary); margin-bottom: 10px; }
-.subtitle { color: #888; font-style: italic; margin-top: -10px; }
-
-/* INPUTS */
 input {
     width: 100%; padding: 15px; margin: 8px 0; background: #000;
     border: 1px solid #444; color: var(--accent); border-radius: 8px; font-size: 16px;
 }
 input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 10px var(--primary); }
-
-/* BUTTONS */
 button {
     width: 100%; padding: 14px; border-radius: 8px; border: none;
     font-family: 'Cinzel', serif; font-weight: bold; font-size: 16px; cursor: pointer; margin-bottom: 8px; transition: 0.2s;
@@ -58,39 +39,19 @@ button:active { transform: scale(0.98); }
 .small-btn { width: auto; padding: 8px 15px; font-size: 0.9em; display: inline-block; }
 .danger { background: #400; color: #ff8888; border: 1px solid red; }
 .auth-actions { display: flex; justify-content: space-between; margin-top: 10px; }
-
-/* RPG CARD */
 .rpg-card { border: 1px solid var(--accent); padding: 15px; border-radius: 12px; background: rgba(0,0,0,0.5); text-align: left; margin: 20px 0; position: relative; }
 .level-progress { background: #222; height: 10px; border-radius: 5px; margin: 10px 0; border: 1px solid #444; }
 .bar-fill { height: 100%; transition: width 1s ease; }
 .badge-container { position: absolute; top: -20px; right: 10px; width: 50px; height: 50px; filter: drop-shadow(0 0 5px gold); }
-
-/* ORBS */
 .stamp-container { display: flex; gap: 8px; justify-content: center; margin: 20px 0; }
 .orb { width: 32px; height: 32px; border-radius: 50%; background: #111; border: 2px solid #333; }
 .orb.filled { background: radial-gradient(circle at 30% 30%, #ffd700, #ff4500); border-color: gold; box-shadow: 0 0 15px #ff4500; }
-
-/* ADMIN LIST */
 .cust-item {
     background: linear-gradient(90deg, #111, #000); padding: 15px; margin: 10px 0;
     border-radius: 8px; text-align: left; border-left: 3px solid var(--primary);
 }
 .cust-header { display: flex; justify-content: space-between; align-items: center; }
 .stamp-control { display: flex; gap: 5px; margin-top: 10px; }
-
-/* MODAL */
 .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: flex; justify-content: center; align-items: center; z-index: 2000; }
-.modal-content { background: #000; border: 2px solid var(--accent); padding: 20px; border-radius: 15px; width: 95%; max-width: 500px; text-align: center;}
-canvas { width: 100%; height: auto; border-radius: 10px; box-shadow: 0 0 20px gold; margin-bottom: 15px;}
-/* Ensure the modal content is large enough for the card */
-.modal-content {
-    max-width: 500px;
-    background: #000;
-}
-/* Ensure canvas fits */
-canvas {
-    width: 100%;
-    height: auto;
-    border-radius: 10px;
-    box-shadow: 0 0 25px gold;
-}
+.modal-content { background: #000; border: 2px solid var(--accent); padding: 20px; border-radius: 15px; width: 95%; max-width: 500px; text-align: center; }
+canvas { width: 100%; height: auto; border-radius: 10px; box-shadow: 0 0 20px gold; margin-bottom: 15px; }
