@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "description": "Loyalty System for RK Dragon Panipuri",
   "main": "api/customer.js",
+  "engines": {
+    "node": "20.x"
+  },
   "dependencies": {
     "pg": "^8.11.3"
-  },
-  "engines": {
-    "node": "18.x"
   }
 }
