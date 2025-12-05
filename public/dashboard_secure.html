@@ -3,98 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Warlord Access</title>
+    <title>Warlord Command</title>
     <meta name="theme-color" content="#8a0303">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <button onclick="window.location.href='index.html'" class="home-icon" title="Go to Customer View">🏠</button>
-    <div class="container glass-panel">
-        <header>
-            <div class="logo-glow">⚔️</div>
+
+    <a href="index.html" class="home-icon">🏠</a>
+
+    <div class="glass-panel app-section">
+        <header class="app-header">
+            <img src="assets/logo.png" class="shop-logo">
             <h1>WARLORD COMMAND</h1>
         </header>
-        
+
         <section id="admin-login-sec">
-            <div class="input-group">
-                <input type="text" id="login-username" placeholder="Admin Username">
-                <input type="password" id="login-pass" placeholder="Password">
-            </div>
-            <button onclick="adminSignIn()" class="large-btn">Login</button>
-            <div class="auth-actions">
-                <button onclick="showSection('admin-register-sec')" class="secondary small-btn">Register</button>
-                <button onclick="showSection('admin-forgot-sec')" class="secondary small-btn">Forgot Pass?</button>
+            <input type="text" id="login-username" placeholder="Username">
+            <input type="password" id="login-pass" placeholder="Password">
+            <button onclick="adminSignIn()" class="primary-btn">Login</button>
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button onclick="showSection('admin-register-sec')" class="secondary-btn" style="flex:1;">Register</button>
+                <button onclick="showSection('admin-forgot-sec')" class="secondary-btn" style="flex:1;">Forgot?</button>
             </div>
         </section>
-        
+
         <section id="admin-register-sec" class="hidden">
-            <h3>New Registration</h3>
-            <input type="text" id="reg-username" placeholder="Choose Username">
-            <input type="email" id="reg-email" placeholder="Email (For Recovery)">
+            <h3>New Admin</h3>
+            <input type="text" id="reg-username" placeholder="New Username">
+            <input type="email" id="reg-email" placeholder="Your Email">
             <input type="password" id="reg-pass" placeholder="Create Password">
-            <button onclick="adminSignUp()" class="large-btn">Register</button>
-            <button onclick="showSection('admin-login-sec')" class="secondary">Back</button>
+            <button onclick="adminSignUp()" class="primary-btn">Register</button>
+            <button onclick="showSection('admin-login-sec')" class="secondary-btn">Back</button>
         </section>
 
         <section id="admin-forgot-sec" class="hidden">
-            <h3>Recover Access</h3>
+            <h3>Recovery</h3>
             <input type="email" id="forgot-email" placeholder="Email Address">
-            <button onclick="resetAdminPassword()" class="large-btn">Send Link</button>
-            <button onclick="showSection('admin-login-sec')" class="secondary">Back</button>
-        </section>
-
-        <section id="admin-update-pass-sec" class="hidden">
-            <h3 style="color:gold;">Set New Password</h3>
-            <input type="password" id="new-password" placeholder="New Password">
-            <button onclick="updateAdminPassword()" class="large-btn pulse-btn">Update</button>
+            <button onclick="resetAdminPassword()" class="primary-btn">Send Link</button>
+            <button onclick="showSection('admin-login-sec')" class="secondary-btn">Back</button>
         </section>
 
         <section id="admin-dashboard" class="hidden">
-            <div class="toolbar">
-                <button onclick="showAdminTab('add')" class="tab-btn active">Add</button>
-                <button onclick="showAdminTab('list')" class="tab-btn">List</button>
-                <button onclick="adminSignOut()" class="tab-btn danger">Logout</button>
+            <div style="display:flex; gap:5px; margin-bottom:20px;">
+                <button onclick="showAdminTab('add')" class="secondary-btn" style="flex:1;">Add</button>
+                <button onclick="showAdminTab('list')" class="secondary-btn" style="flex:1;">List</button>
+                <button onclick="adminSignOut()" class="danger-btn" style="flex:1;">Logout</button>
             </div>
+
             <div id="adm-add-sec">
-                <h3>Summon Customer</h3>
-                <input type="text" id="new-name" placeholder="Customer Name">
-                <input type="number" id="new-mobile" placeholder="Mobile Number">
-                <button onclick="createCustomer()" class="large-btn">Generate ID Card</button>
+                <input type="text" id="new-name" placeholder="Name">
+                <input type="number" id="new-mobile" placeholder="Mobile">
+                <button onclick="createCustomer()" class="primary-btn">Generate ID</button>
             </div>
+
             <div id="adm-list-sec" class="hidden">
-                <div class="tools-panel">
-                    <button onclick="exportCSV()" class="small-btn">⬇ Export</button>
-                    <button onclick="document.getElementById('csv-input').click()" class="small-btn">⬆ Import</button>
+                <div style="display:flex; gap:5px; margin-bottom:10px;">
+                    <button onclick="exportCSV()" class="secondary-btn" style="font-size:0.8em;">⬇ CSV</button>
+                    <button onclick="document.getElementById('csv-input').click()" class="secondary-btn" style="font-size:0.8em;">⬆ Import</button>
                     <input type="file" id="csv-input" accept=".csv" class="hidden" onchange="importCSV()">
                 </div>
-                <div class="search-container"><input type="text" id="search-input" placeholder="🔍 Search..." onkeyup="searchCustomers()"></div>
-                <div id="customer-list">Loading scrolls...</div>
+                <input type="text" id="search-input" placeholder="🔍 Search..." onkeyup="searchCustomers()">
+                <div id="customer-list"></div>
             </div>
         </section>
     </div>
 
     <div id="id-modal" class="modal hidden">
         <div class="modal-content">
-            <h3>Identity Rune</h3>
-            <div class="canvas-wrapper"><canvas id="cardCanvas" width="450" height="270"></canvas></div>
+            <canvas id="cardCanvas" width="450" height="270"></canvas>
             <br>
-            <div class="modal-actions">
-                <button onclick="downloadID()" class="large-btn">Save Image</button>
-                <button class="secondary" onclick="closeModal('id-modal')">Close</button>
-            </div>
+            <button onclick="downloadID()" class="primary-btn">Save Image</button>
+            <button onclick="closeModal('id-modal')" class="secondary-btn">Close</button>
         </div>
     </div>
-    <script src="app.js"></script>
-    <script>
-        if(typeof supabase !== 'undefined') {
-            const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-            client.auth.onAuthStateChange((event, session) => {
-                if(event === 'SIGNED_IN') showSection('admin-dashboard');
-                if(event === 'PASSWORD_RECOVERY') showSection('admin-update-pass-sec');
-            });
-        }
-    </script>
+
+    <script src="js/app.js"></script>
 </body>
 </html>
