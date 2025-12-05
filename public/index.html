@@ -3,38 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Customer Portal</title>
+    <title>RK Dragon Loyalty</title>
+    <meta name="theme-color" content="#8a0303">
+    <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
+
     <div class="glass-panel app-section" id="cust-login-sec">
         <header class="app-header">
-            <img src="assets/logo.png" class="shop-logo">
-            <h1>CUSTOMER PORTAL</h1>
+            <img src="assets/logo.png" class="shop-logo secret-trigger" onclick="secretAdminAccess()">
+            <h1>CUSTOMER GRIMOIRE</h1>
+            <p class="subtitle">Check Your Rank</p>
         </header>
-        <input type="text" id="cust-login-id" placeholder="Enter Rune ID">
-        <button onclick="customerLogin()" class="primary-btn pulse-btn">Check Stats</button>
-        <div onclick="secretAdminAccess()" style="height:50px; margin-top:50px;"></div>
+
+        <div class="input-group">
+            <input type="text" id="cust-login-id" placeholder="Enter Rune ID (e.g. RK1234)">
+            <button onclick="customerLogin()" class="primary-btn pulse-btn">Check Stats</button>
+        </div>
     </div>
 
     <div class="glass-panel app-section hidden" id="cust-dashboard">
         <header class="app-header">
             <img src="assets/logo.png" class="shop-logo" style="width:80px; height:80px;">
-            <h2 id="display-cust-name">Name</h2>
+            <h2 id="display-cust-name">Warrior</h2>
         </header>
         
         <div class="rpg-card">
             <img id="rank-shield-img" class="shield-icon" src="assets/shield_bronze.png">
             <div class="level-info">
                 <div class="level-title" id="display-rank-name">BRONZE</div>
-                <div class="redeem-count">Total Redeems: <span id="display-redeems">0</span></div>
+                <div class="redeem-count">Redeems: <span id="display-redeems">0</span></div>
             </div>
             <div class="progress-track"><div class="progress-fill" id="xp-bar"></div></div>
         </div>
 
         <div class="stamp-container" id="cust-stamps-display"></div>
+        
         <button id="view-my-id-btn" class="secondary-btn">💳 View ID Card</button>
         <button onclick="location.reload()" class="secondary-btn" style="margin-top:10px;">Exit</button>
     </div>
@@ -47,9 +54,30 @@
             <button onclick="closeModal('id-modal')" class="secondary-btn">Close</button>
         </div>
     </div>
+
     <script src="js/app.js"></script>
+
     <script>
-        let taps=0; function secretAdminAccess(){ taps++; if(taps===5) window.location.href='dashboard_secure.html'; setTimeout(()=>taps=0, 1000); }
+        let tapCount = 0;
+        let tapTimer = null;
+
+        function secretAdminAccess() {
+            tapCount++;
+            
+            // Reset count if user stops tapping for 1 second
+            if (tapTimer) clearTimeout(tapTimer);
+            tapTimer = setTimeout(() => { tapCount = 0; }, 1000);
+
+            if (tapCount === 5) {
+                // Visual Flash Effect
+                document.body.style.animation = "secretFlash 0.5s";
+                document.body.style.backgroundColor = "gold";
+                
+                setTimeout(() => {
+                    window.location.href = 'dashboard_secure.html'; // Teleport to Admin
+                }, 400);
+            }
+        }
     </script>
 </body>
 </html>
