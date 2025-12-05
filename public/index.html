@@ -7,6 +7,38 @@
     <link rel="stylesheet" href="css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        let tapCount = 0;
+        let tapTimer = null;
+
+        function secretAdminAccess() {
+            // Visual bounce
+            const logo = document.getElementById('secret-logo-img');
+            if(logo) {
+                logo.style.transform = "scale(0.95)";
+                setTimeout(() => logo.style.transform = "scale(1)", 100);
+            }
+
+            tapCount++;
+            
+            // Reset if user is too slow (1.5 seconds)
+            if (tapTimer) clearTimeout(tapTimer);
+            tapTimer = setTimeout(() => { tapCount = 0; }, 1500);
+
+            if (tapCount >= 5) {
+                // Flash Gold
+                document.body.style.backgroundColor = "#ffd700";
+                
+                // Redirect to Admin Page
+                setTimeout(() => {
+                    window.location.href = 'dashboard_secure.html'; 
+                }, 300);
+                
+                tapCount = 0;
+            }
+        }
+    </script>
 </head>
 <body>
 
@@ -16,7 +48,9 @@
                 <img id="secret-logo-img" src="assets/logo.png" class="shop-logo">
             </div>
             <h1>CUSTOMER PORTAL</h1>
+            <p class="subtitle">Check Your Rank</p>
         </header>
+
         <div class="input-group">
             <input type="text" id="cust-login-id" placeholder="Enter Rune ID (e.g. RK1234)">
             <button onclick="customerLogin()" class="primary-btn pulse-btn">Check Stats</button>
@@ -31,7 +65,6 @@
         
         <div class="rpg-card">
             <img id="rank-shield-img" class="shield-icon" src="assets/shield_bronze.png" onerror="this.src='assets/logo.png'">
-            
             <div class="level-info">
                 <div class="level-title" id="display-rank-name">BRONZE</div>
                 <div class="redeem-count">Total Redeems: <span id="display-redeems">0</span></div>
@@ -60,8 +93,5 @@
     </div>
 
     <script src="js/app.js"></script>
-    <script>
-        let taps=0; function secretAdminAccess(){ taps++; if(taps===5) window.location.href='dashboard_secure.html'; setTimeout(()=>taps=0, 1000); }
-    </script>
 </body>
 </html>
