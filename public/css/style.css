@@ -1,285 +1,68 @@
 :root {
-    --primary: #ff4500;   /* Dragon Fire Orange */
-    --accent: #ffd700;    /* Gold */
-    --bg: #050505;        /* Deep Black */
-    --panel: rgba(20, 20, 20, 0.95);
-    --border: rgba(255, 69, 0, 0.3);
+    --primary: #ff4500; --accent: #ffd700; --bg: #050505;
+    --panel: rgba(20, 20, 20, 0.95); --border: rgba(255, 69, 0, 0.3);
 }
-
 * { box-sizing: border-box; }
-
 body {
-    background-color: var(--bg);
-    color: white;
-    font-family: 'Roboto', sans-serif;
-    text-align: center;
-    margin: 0;
-    padding: 20px 10px;
+    background-color: var(--bg); color: white; font-family: 'Roboto', sans-serif;
+    text-align: center; margin: 0; padding: 20px 10px;
     background-image: radial-gradient(circle at 50% 0%, #2a0000 0%, #000 70%);
     min-height: 100vh;
-    transition: background-color 0.5s;
 }
 
-/* --- HOME ICON (Top Left) --- */
-.home-icon {
-    position: fixed;
-    top: 15px;
-    left: 15px;
-    width: 45px;
-    height: 45px;
-    background: rgba(0,0,0,0.8);
-    border: 1px solid var(--accent);
-    border-radius: 50%;
-    color: white;
-    font-size: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-    z-index: 1000;
-    cursor: pointer;
-    box-shadow: 0 0 10px var(--primary);
-    transition: 0.3s;
-}
-.home-icon:hover { transform: scale(1.1); background: var(--primary); }
+/* LOGO & ICONS */
+.app-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; }
+.shop-logo { width: 120px; height: 120px; object-fit: contain; filter: drop-shadow(0 0 15px rgba(255, 69, 0, 0.5)); margin-bottom: 10px; }
+.home-icon { position: fixed; top: 15px; left: 15px; width: 45px; height: 45px; background: rgba(0,0,0,0.8); border: 1px solid var(--accent); border-radius: 50%; color: white; font-size: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 1000; }
 
-/* --- LOGO & SECRET TRIGGER --- */
-.app-header {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.logo-wrapper {
-    display: inline-block;
-    cursor: pointer;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation; /* FIX: Makes tapping instant on mobile */
-    padding: 10px;
-}
-
-.shop-logo {
-    width: 120px;
-    height: 120px;
-    object-fit: contain;
-    filter: drop-shadow(0 0 15px rgba(255, 69, 0, 0.5));
-    transition: transform 0.1s;
-}
-
-/* --- GLASS PANEL CONTAINER --- */
-.glass-panel {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 25px;
-    width: 100%;
-    max-width: 500px;
-    margin: 20px auto;
-    box-shadow: 0 0 40px rgba(0,0,0,0.8);
-    position: relative;
-}
-
+/* GLASS PANEL */
+.glass-panel { background: var(--panel); border: 1px solid var(--border); border-radius: 20px; padding: 25px; width: 100%; max-width: 500px; margin: 20px auto; box-shadow: 0 0 40px rgba(0,0,0,0.8); position: relative; }
 .hidden { display: none !important; }
 
-/* --- TYPOGRAPHY --- */
-h1, h2 {
-    font-family: 'Cinzel', serif;
-    color: var(--accent);
-    margin: 5px 0;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
+/* TYPOGRAPHY */
+h1, h2 { font-family: 'Cinzel', serif; color: var(--accent); margin: 5px 0; text-transform: uppercase; letter-spacing: 1px; }
 .subtitle { color: #888; font-size: 0.9em; margin-top: -5px; }
 
-/* --- RPG CARD (Shield & Rank) --- */
-.rpg-card {
-    background: linear-gradient(135deg, #1a1a1a, #0d0d0d);
-    border: 1px solid var(--accent);
-    padding: 20px;
-    border-radius: 15px;
-    position: relative;
-    text-align: left;
-    margin-top: 40px;
-}
-
-.shield-icon {
-    position: absolute;
-    top: -35px;
-    right: 15px;
-    width: 70px;
-    height: 70px;
-    object-fit: contain;
-    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.3));
-}
-
-.level-title {
-    font-size: 1.4em;
-    color: var(--accent);
-    font-weight: bold;
-    font-family: 'Cinzel', serif;
-}
-
-.redeem-count { color: #aaa; font-size: 0.9em; }
-
-.progress-track {
-    background: #333;
-    height: 8px;
-    border-radius: 4px;
-    overflow: hidden;
-    margin-top: 10px;
-}
-
-.progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #ff4500, #ffd700);
-    width: 0%;
-    transition: width 0.5s;
-}
-
-/* --- DRAGON BALL STAMPS --- */
+/* DRAGON BALL STAMPS */
 .stamp-container { 
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    margin: 25px 0; 
-    padding: 15px;
-    background: rgba(0,0,0,0.3);
-    border-radius: 50px;
-    border: 1px solid #333;
+    display: flex; gap: 10px; justify-content: center; margin: 15px 0; 
+    padding: 10px; background: rgba(0,0,0,0.3); border-radius: 50px; border: 1px solid #333;
 }
-
 .dragon-ball {
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
+    width: 35px; height: 35px; border-radius: 50%;
     background: radial-gradient(circle at 30% 30%, #444, #111);
-    border: 2px solid #333;
-    position: relative;
-    transition: 0.3s;
+    border: 2px solid #333; position: relative; transition: 0.3s;
 }
-
 .dragon-ball.filled {
     background: radial-gradient(circle at 30% 30%, #ffcc00, #ff8800, #cc4400);
     border-color: #ffd700;
     box-shadow: 0 0 15px #ff4500, inset 0 0 5px #ffff00;
     transform: scale(1.1);
 }
-
 .dragon-ball.filled::after {
-    content: "★";
-    color: #b30000;
-    font-size: 14px;
-    font-weight: bold;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    content: "★"; color: #b30000; font-size: 16px; font-weight: bold;
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
 }
 
-/* --- FORMS & BUTTONS --- */
-input {
-    width: 100%;
-    padding: 12px;
-    background: #111;
-    border: 1px solid #444;
-    color: white;
-    border-radius: 8px;
-    margin: 10px 0;
-}
-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 10px var(--primary); }
+/* LIST ITEM */
+.cust-item { background: #111; padding: 15px; margin: 10px 0; border-radius: 10px; border-left: 4px solid var(--primary); text-align: left; position: relative; }
+.rank-mini-icon { position: absolute; top: 10px; right: 10px; width: 30px; height: 30px; object-fit: contain; }
 
-button {
-    width: 100%;
-    padding: 12px;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    font-family: 'Cinzel', serif;
-    font-weight: bold;
-    transition: 0.2s;
-    margin-bottom: 5px;
-}
-button:active { transform: scale(0.98); }
+/* UI ELEMENTS */
+input { width: 100%; padding: 12px; background: #111; border: 1px solid #444; color: white; border-radius: 8px; margin: 10px 0; }
+button { width: 100%; padding: 12px; border-radius: 8px; border: none; cursor: pointer; font-family: 'Cinzel', serif; font-weight: bold; margin-bottom: 5px; }
+.primary-btn { background: linear-gradient(135deg, #8b0000, #ff4500); color: white; border: 1px solid var(--accent); }
+.secondary-btn { background: #222; color: #ccc; border: 1px solid #444; }
+.danger-btn { background: #330000; color: #ff5555; border: 1px solid #ff0000; }
 
-.primary-btn {
-    background: linear-gradient(135deg, #8b0000, #ff4500);
-    color: white;
-    border: 1px solid var(--accent);
-}
+/* RPG CARD */
+.rpg-card { background: linear-gradient(135deg, #1a1a1a, #0d0d0d); border: 1px solid var(--accent); padding: 20px; border-radius: 15px; position: relative; text-align: left; margin-top: 40px; }
+.shield-icon { position: absolute; top: -35px; right: 15px; width: 70px; height: 70px; object-fit: contain; filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.3)); }
+.level-title { font-size: 1.4em; color: var(--accent); font-weight: bold; font-family: 'Cinzel', serif; }
+.progress-track { background: #333; height: 8px; border-radius: 4px; overflow: hidden; margin-top: 10px; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, #ff4500, #ffd700); width: 0%; transition: width 0.5s; }
 
-.secondary-btn {
-    background: #222;
-    color: #ccc;
-    border: 1px solid #444;
-}
-
-.danger-btn {
-    background: #330000;
-    color: #ff5555;
-    border: 1px solid #ff0000;
-}
-
-.pulse-btn { animation: pulse 2s infinite; }
-
-/* --- LIST ITEMS --- */
-.cust-item {
-    background: #111;
-    padding: 15px;
-    margin: 10px 0;
-    border-radius: 10px;
-    border-left: 4px solid var(--primary);
-    text-align: left;
-    position: relative;
-}
-
-.rank-mini-icon {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    width: 30px;
-    height: 30px;
-    object-fit: contain;
-}
-
-/* --- MODAL --- */
-.modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.9);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 2000;
-}
-
-.modal-content {
-    background: #000;
-    padding: 20px;
-    border-radius: 15px;
-    border: 2px solid var(--accent);
-    box-shadow: 0 0 30px var(--primary);
-    width: 95%;
-    max-width: 500px;
-    text-align: center;
-}
-
-canvas {
-    width: 100%;
-    max-width: 450px;
-    height: auto;
-    border-radius: 10px;
-    box-shadow: 0 0 25px gold;
-    margin-bottom: 15px;
-}
-
-/* --- ANIMATIONS --- */
-@keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(255, 69, 0, 0.7); }
-    70% { box-shadow: 0 0 0 10px rgba(255, 69, 0, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(255, 69, 0, 0); }
-}
+/* MODAL */
+.modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 999; }
+.modal-content { background: #000; padding: 20px; border-radius: 15px; border: 2px solid var(--accent); }
+canvas { width: 100%; max-width: 450px; height: auto; border-radius: 10px; box-shadow: 0 0 25px gold; }
