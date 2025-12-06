@@ -31,7 +31,7 @@ function showSection(id) {
 }
 
 // ==========================================
-// 🛡️ RANK LOGIC (Source of Truth)
+// 🛡️ RANK LOGIC
 // ==========================================
 function getRankInfo(redeems) {
     const r = parseInt(redeems) || 0;
@@ -45,13 +45,12 @@ function getRankInfo(redeems) {
 }
 
 // ==========================================
-// 📋 ADMIN LIST LOADING (FIXED & SAFE)
+// 📋 ADMIN LIST LOADING
 // ==========================================
 async function loadCustomers() {
     const el = document.getElementById('customer-list');
     if(!el) return;
     
-    // Only show loading if empty to prevent flickering
     if(el.innerHTML.trim() === "") el.innerHTML = '<div style="color:#888; margin-top:20px;">Summoning data...</div>';
     
     try {
@@ -83,24 +82,22 @@ function renderAdminList(data) {
 
     data.forEach(c => {
         try {
-            // Safety Defaults
             const safeRedeems = c.redeems || 0;
             const safeStamps = c.stamps || 0;
             const rank = getRankInfo(safeRedeems);
-            
             let btns = '';
 
             if(safeStamps >= 6) {
                 btns = `
                 <div class="stamp-control">
-                    <button onclick="updateStamp('${c.customer_id}', 'reset')" class="primary-btn" style="flex:2;">🎁 REDEEM</button>
-                    <button onclick="updateStamp('${c.customer_id}', 'remove')" class="secondary-btn" style="flex:1;">Undo</button>
+                    <button onclick="updateStamp(this, '${c.customer_id}', 'reset')" class="primary-btn" style="flex:2;">🎁 REDEEM</button>
+                    <button onclick="updateStamp(this, '${c.customer_id}', 'remove')" class="secondary-btn" style="flex:1;">Undo</button>
                 </div>`;
             } else {
                 btns = `
                 <div class="stamp-control">
-                    <button onclick="updateStamp('${c.customer_id}', 'add')" class="primary-btn" style="flex:2;">+ Stamp</button>
-                    <button onclick="updateStamp('${c.customer_id}', 'remove')" class="secondary-btn" style="flex:1;">-</button>
+                    <button onclick="updateStamp(this, '${c.customer_id}', 'add')" class="primary-btn" style="flex:2;">+ Stamp</button>
+                    <button onclick="updateStamp(this, '${c.customer_id}', 'remove')" class="secondary-btn" style="flex:1;">-</button>
                 </div>`;
             }
 
@@ -114,6 +111,9 @@ function renderAdminList(data) {
                         <div style="color:${rank.color}; font-size:0.9em;">${c.customer_id}</div>
                     </div>
                 </div>
+                <div style="font-size:0.8em; color:#888; margin-bottom:10px;">
+                    Mobile: ${c.mobile} | Lvl: <span style="color:${rank.color}">${rank.name}</span> (${safeRedeems})
+                </div>
                 <div class="stamp-container">${getDragonBalls(safeStamps)}</div>
                 ${btns}
                 <div style="margin-top:10px; border-top:1px solid #333; padding-top:10px; display:flex; gap:10px;">
@@ -122,9 +122,7 @@ function renderAdminList(data) {
                 </div>
             `;
             el.appendChild(div);
-        } catch (renderError) {
-            console.error("Skipped bad record", renderError);
-        }
+        } catch (renderError) { console.error("Skipped bad record", renderError); }
     });
 }
 
@@ -138,25 +136,39 @@ function getDragonBalls(count) {
 }
 
 // ==========================================
+// 🔍 SEARCH LOGIC (UPDATED WITH MOBILE)
+// ==========================================
+function searchCustomers() {
+    const q = document.getElementById('search-input').value.toLowerCase();
+    
+    const filtered = customersList.filter(c => 
+        (c.name && c.name.toLowerCase().includes(q)) || 
+        (c.customer_id && c.customer_id.toLowerCase().includes(q)) ||
+        (c.mobile && String(c.mobile).includes(q)) // ADDED MOBILE SEARCH
+    );
+    
+    renderAdminList(filtered);
+}
+
+// ==========================================
 // ⚡ CORE ACTIONS
 // ==========================================
-async function updateStamp(id, type) {
-    const cust = customersList.find(c => c.customer_id === id);
-    if(!cust) return;
-
-    // Optimistic Update
-    if(type === 'add') { cust.stamps = (cust.stamps || 0) + 1; }
-    else if (type === 'remove') { cust.stamps = Math.max(0, (cust.stamps || 0) - 1); }
-    else if (type === 'reset') { cust.stamps = 0; cust.redeems = (cust.redeems || 0) + 1; }
+async function updateStamp(btn, id, type) {
+    if(btn) { btn.disabled = true; btn.style.opacity = "0.5"; }
     
-    renderAdminList(customersList);
+    const cust = customersList.find(c => c.customer_id === id);
+    if(cust) {
+        if(type === 'add') { cust.stamps = (cust.stamps || 0) + 1; }
+        else if (type === 'remove') { cust.stamps = Math.max(0, (cust.stamps || 0) - 1); }
+        else if (type === 'reset') { cust.stamps = 0; cust.redeems = (cust.redeems || 0) + 1; }
+        renderAdminList(customersList);
+    }
 
     await fetch(`${API_URL}/customer`, {
         method: 'POST', headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({action: 'stamp', id, type})
     });
-    // Silent reload to ensure sync
-    loadCustomers();
+    loadCustomers(); 
 }
 
 async function createCustomer() {
@@ -165,35 +177,39 @@ async function createCustomer() {
     
     if(!name || !mobile) return alert("Fill Name and Mobile");
 
-    const res = await fetch(`${API_URL}/customer`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'add', name, mobile}) });
-    const data = await res.json();
-    if(res.ok) { 
-        alert("Created: " + data.customerId);
-        generateIDCard(name, data.customerId, 0); 
-        loadCustomers(); 
-        document.getElementById('new-name').value = "";
-        document.getElementById('new-mobile').value = "";
-    } else alert(data.error);
+    const btn = document.querySelector('#adm-add-sec button');
+    btn.innerText = "Creating..."; btn.disabled = true;
+
+    try {
+        const res = await fetch(`${API_URL}/customer`, { 
+            method: 'POST', headers: {'Content-Type': 'application/json'}, 
+            body: JSON.stringify({action: 'add', name, mobile}) 
+        });
+        const data = await res.json();
+        
+        if(res.ok) { 
+            alert("Added!");
+            document.getElementById('new-name').value = "";
+            document.getElementById('new-mobile').value = "";
+            generateIDCard(name, data.customerId, 0); 
+            loadCustomers();
+        } else { alert("Error: " + data.error); }
+    } catch (e) { alert("Network Error"); } 
+    finally { btn.innerText = "Generate ID"; btn.disabled = false; }
 }
 
-// 🔒 SECURE DELETE
 async function deleteCustomer(id) {
-    if(!confirm("Delete this customer?")) return;
+    if(!confirm("Permanently Delete?")) return;
     
-    const password = prompt("Enter Admin Password to confirm:");
+    const password = prompt("🔒 SECURITY CHECK\nEnter Admin Password:");
     if(!password) return;
 
     if (!currentUserEmail) {
-        // Fallback if email lost
         const { data: { session } } = await supabaseClient.auth.getSession();
         if(session) currentUserEmail = session.user.email;
     }
 
-    const { error } = await supabaseClient.auth.signInWithPassword({
-        email: currentUserEmail,
-        password: password
-    });
-
+    const { error } = await supabaseClient.auth.signInWithPassword({ email: currentUserEmail, password: password });
     if (error) return alert("Wrong Password!");
 
     await fetch(`${API_URL}/customer`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'delete', id}) });
@@ -201,7 +217,7 @@ async function deleteCustomer(id) {
 }
 
 // ==========================================
-// 🎨 ID CARD (Fixed)
+// 🎨 ID CARD
 // ==========================================
 async function generateIDCard(name, id, redeems = 0) {
     document.getElementById('id-modal').classList.remove('hidden');
@@ -255,8 +271,6 @@ async function generateIDCard(name, id, redeems = 0) {
     let dName = name.toUpperCase(); if(dName.length > 20) dName = dName.substring(0, 18) + "..";
     ctx.fillText(dName, 25, 230);
     ctx.fillStyle = "#fff"; ctx.font = "12px sans-serif"; ctx.fillText(rank.name + " TIER", 25, 250);
-    
-    // Footer
     ctx.fillStyle = rank.color; ctx.fillRect(350, 240, 80, 8);
 }
 
@@ -266,22 +280,8 @@ function downloadID() {
 }
 
 // ==========================================
-// 🛡️ ADMIN AUTH (Username)
+// 🛡️ ADMIN AUTH
 // ==========================================
-async function checkAdminSession() {
-    if(!supabaseClient) return;
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (session) {
-        showSection('admin-dashboard');
-        loadCustomers();
-    } else {
-        // If not logged in and we are on admin page, show login
-        if (document.getElementById('admin-login-sec')) {
-            showSection('admin-login-sec');
-        }
-    }
-}
-
 async function adminSignIn() {
     const username = document.getElementById('login-username').value;
     const password = document.getElementById('login-pass').value;
@@ -324,17 +324,14 @@ async function updateAdminPassword() {
     if (error) alert(error.message); else { alert("Updated! Login."); adminSignOut(); }
 }
 
-// Helpers & CSV
 function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 function showAdminTab(tab) {
     document.getElementById('adm-add-sec').classList.add('hidden'); document.getElementById('adm-list-sec').classList.add('hidden');
     if(tab === 'add') document.getElementById('adm-add-sec').classList.remove('hidden');
     if(tab === 'list') { document.getElementById('adm-list-sec').classList.remove('hidden'); loadCustomers(); }
 }
-function searchCustomers() {
-    const q = document.getElementById('search-input').value.toLowerCase();
-    renderAdminList(customersList.filter(c => c.name.toLowerCase().includes(q) || c.customer_id.toLowerCase().includes(q)));
-}
+
+// CSV
 function exportCSV() { 
     if(customersList.length === 0) return alert("No data");
     const headers = ["Name", "Mobile", "ID", "Stamps", "Redeems", "Lifetime"];
@@ -357,6 +354,7 @@ function importCSV() {
         const idxID = headers.indexOf('id');
         if(idxName === -1 || idxID === -1) return alert("CSV needs Name & ID columns");
         let batch = [];
+        let count = 0;
         for (let i = 1; i < lines.length; i++) {
             const cols = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || [];
             if (cols.length < 2) continue;
@@ -369,11 +367,12 @@ function importCSV() {
             if (batch.length >= 50 || i === lines.length - 1) {
                 if (batch.length > 0) {
                     await fetch(`${API_URL}/customer`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ action: 'import', data: batch }) });
+                    count += batch.length;
                     batch = [];
                 }
             }
         }
-        alert("Import Successful!"); loadCustomers(); fileInput.value = "";
+        alert(`Success! Imported ${count}.`); loadCustomers(); fileInput.value = "";
     };
     reader.readAsText(file);
 }
@@ -401,7 +400,6 @@ function renderCustomerStats(c) {
     document.getElementById('display-rank-name').style.color = rank.color;
     document.getElementById('display-redeems').innerText = c.redeems || 0;
     document.getElementById('rank-shield-img').src = `assets/${rank.img}`;
-    document.getElementById('rank-shield-img').onerror = function() { this.src = 'assets/logo.png'; };
     const nextGoal = rank.next;
     const progress = Math.min(((c.redeems || 0) / nextGoal) * 100, 100);
     document.getElementById('xp-bar').style.width = `${progress}%`;
