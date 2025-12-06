@@ -11,7 +11,6 @@ let customersList = []; // Global Store
 if (typeof supabase !== 'undefined') {
     supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     
-    // Auth Listener
     supabaseClient.auth.onAuthStateChange((event, session) => {
         if (event === 'SIGNED_IN' && session) {
             currentUserEmail = session.user.email;
@@ -45,28 +44,62 @@ function getRankInfo(redeems) {
 }
 
 // ==========================================
-// 📋 ADMIN LIST LOADING
+// ⚡ STAMP LOGIC (FIXED: INSTANT UPDATE)
+// ==========================================
+async function updateStamp(btn, id, type) {
+    // 1. Find Customer in Memory
+    const cust = customersList.find(c => c.customer_id === id);
+    if(!cust) return;
+
+    // 2. Update Memory Instantly
+    if(type === 'add') { 
+        cust.stamps = (cust.stamps || 0) + 1; 
+        cust.lifetime_stamps = (cust.lifetime_stamps || 0) + 1;
+    }
+    else if (type === 'remove') { 
+        cust.stamps = Math.max(0, (cust.stamps || 0) - 1); 
+        cust.lifetime_stamps = Math.max(0, (cust.lifetime_stamps || 0) - 1);
+    }
+    else if (type === 'reset') { 
+        cust.stamps = 0; 
+        cust.redeems = (cust.redeems || 0) + 1; 
+    }
+    
+    // 3. Re-draw the list IMMEDIATELY (No Loading Screen)
+    renderAdminList(customersList);
+
+    // 4. Send to Server in Background (Silent Sync)
+    try {
+        await fetch(`${API_URL}/customer`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({action: 'stamp', id, type})
+        });
+    } catch (e) {
+        console.error("Sync Error:", e);
+        // Optional: Revert UI if internet fails, but keeping it simple for smooth UX
+    }
+}
+
+// ==========================================
+// 📋 ADMIN LIST
 // ==========================================
 async function loadCustomers() {
     const el = document.getElementById('customer-list');
     if(!el) return;
     
-    if(el.innerHTML.trim() === "") el.innerHTML = '<div style="color:#888; margin-top:20px;">Summoning data...</div>';
+    // Only show loading text if the list is completely empty
+    if(customersList.length === 0) el.innerHTML = '<div style="color:#888; margin-top:20px;">Summoning data...</div>';
     
     try {
         const res = await fetch(`${API_URL}/customer?action=list`);
         if (!res.ok) throw new Error("API Connection Failed");
         
         customersList = await res.json();
-        
-        if (!Array.isArray(customersList)) {
-            throw new Error("Data format error");
-        }
-        
         renderAdminList(customersList);
     } catch(e) { 
         console.error(e);
-        el.innerHTML = `<div style="color:red; margin-top:20px;">Error: ${e.message} <br> <button onclick="loadCustomers()" class="small-btn">Retry</button></div>`;
+        el.innerHTML = `<div style="color:red; margin-top:20px;">Connection Failed. <button onclick="loadCustomers()">Retry</button></div>`;
     }
 }
 
@@ -81,54 +114,60 @@ function renderAdminList(data) {
     }
 
     data.forEach(c => {
-        try {
-            const safeRedeems = c.redeems || 0;
-            const safeStamps = c.stamps || 0;
-            const rank = getRankInfo(safeRedeems);
-            let btns = '';
+        // Ensure numbers are Integers
+        const safeRedeems = parseInt(c.redeems) || 0;
+        const safeStamps = parseInt(c.stamps) || 0;
+        const rank = getRankInfo(safeRedeems);
+        
+        let btns = '';
 
-            if(safeStamps >= 6) {
-                btns = `
-                <div class="stamp-control">
-                    <button onclick="updateStamp(this, '${c.customer_id}', 'reset')" class="primary-btn" style="flex:2;">🎁 REDEEM</button>
-                    <button onclick="updateStamp(this, '${c.customer_id}', 'remove')" class="secondary-btn" style="flex:1;">Undo</button>
-                </div>`;
-            } else {
-                btns = `
-                <div class="stamp-control">
-                    <button onclick="updateStamp(this, '${c.customer_id}', 'add')" class="primary-btn" style="flex:2;">+ Stamp</button>
-                    <button onclick="updateStamp(this, '${c.customer_id}', 'remove')" class="secondary-btn" style="flex:1;">-</button>
-                </div>`;
-            }
+        if(safeStamps >= 6) {
+            btns = `
+            <div class="stamp-control">
+                <button onclick="updateStamp(this, '${c.customer_id}', 'reset')" class="primary-btn" style="flex:2;">🎁 REDEEM</button>
+                <button onclick="updateStamp(this, '${c.customer_id}', 'remove')" class="secondary-btn" style="flex:1;">Undo</button>
+            </div>`;
+        } else {
+            btns = `
+            <div class="stamp-control">
+                <button onclick="updateStamp(this, '${c.customer_id}', 'add')" class="primary-btn" style="flex:2;">+ Stamp</button>
+                <button onclick="updateStamp(this, '${c.customer_id}', 'remove')" class="secondary-btn" style="flex:1;">-</button>
+            </div>`;
+        }
 
-            const div = document.createElement('div');
-            div.className = 'cust-item';
-            div.innerHTML = `
-                <img src="assets/${rank.img}" class="rank-mini-icon" onerror="this.style.display='none'">
-                <div class="cust-header">
-                    <div>
-                        <div style="font-weight:bold; font-size:1.1em; color:white;">${c.name}</div>
-                        <div style="color:${rank.color}; font-size:0.9em;">${c.customer_id}</div>
-                    </div>
+        const div = document.createElement('div');
+        div.className = 'cust-item';
+        div.innerHTML = `
+            <img src="assets/${rank.img}" class="rank-mini-icon" onerror="this.style.display='none'">
+            <div class="cust-header">
+                <div>
+                    <div style="font-weight:bold; font-size:1.1em; color:white;">${c.name}</div>
+                    <div style="color:${rank.color}; font-size:0.9em;">${c.customer_id}</div>
                 </div>
-                <div style="font-size:0.8em; color:#888; margin-bottom:10px;">
-                    Mobile: ${c.mobile} | Lvl: <span style="color:${rank.color}">${rank.name}</span> (${safeRedeems})
-                </div>
-                <div class="stamp-container">${getDragonBalls(safeStamps)}</div>
-                ${btns}
-                <div style="margin-top:10px; border-top:1px solid #333; padding-top:10px; display:flex; gap:10px;">
-                    <button onclick="generateIDCard('${c.name}', '${c.customer_id}', ${safeRedeems})" class="secondary-btn" style="font-size:0.8em; padding:8px;">View ID</button>
-                    <button onclick="deleteCustomer('${c.customer_id}')" class="secondary-btn" style="font-size:0.8em; padding:8px; border-color:red; color:red;">Delete</button>
-                </div>
-            `;
-            el.appendChild(div);
-        } catch (renderError) { console.error("Skipped bad record", renderError); }
+            </div>
+            <div style="font-size:0.8em; color:#888; margin-bottom:10px;">
+                Mobile: ${c.mobile} | Lvl: <span style="color:${rank.color}">${rank.name}</span>
+            </div>
+            
+            <div class="stamp-container">
+                ${getDragonBalls(safeStamps)}
+            </div>
+            
+            ${btns}
+
+            <div class="action-row" style="margin-top:10px; display:flex; gap:10px;">
+                <button class="secondary-btn" style="font-size:0.8em; padding:8px;" onclick="generateIDCard('${c.name}', '${c.customer_id}', ${safeRedeems})">View ID</button>
+                <button class="secondary-btn" style="font-size:0.8em; padding:8px; border-color:red; color:red;" onclick="deleteCustomer('${c.customer_id}')">Delete</button>
+            </div>
+        `;
+        el.appendChild(div);
     });
 }
 
 function getDragonBalls(count) {
     let html = '';
     for(let i=0; i<6; i++) {
+        // Strict number comparison
         const filled = i < count ? 'filled' : '';
         html += `<div class="dragon-ball ${filled}"></div>`;
     }
@@ -136,7 +175,7 @@ function getDragonBalls(count) {
 }
 
 // ==========================================
-// 🔍 SEARCH LOGIC (UPDATED WITH MOBILE)
+// 🔍 SEARCH LOGIC
 // ==========================================
 function searchCustomers() {
     const q = document.getElementById('search-input').value.toLowerCase();
@@ -144,7 +183,7 @@ function searchCustomers() {
     const filtered = customersList.filter(c => 
         (c.name && c.name.toLowerCase().includes(q)) || 
         (c.customer_id && c.customer_id.toLowerCase().includes(q)) ||
-        (c.mobile && String(c.mobile).includes(q)) // ADDED MOBILE SEARCH
+        (c.mobile && String(c.mobile).includes(q))
     );
     
     renderAdminList(filtered);
@@ -153,24 +192,6 @@ function searchCustomers() {
 // ==========================================
 // ⚡ CORE ACTIONS
 // ==========================================
-async function updateStamp(btn, id, type) {
-    if(btn) { btn.disabled = true; btn.style.opacity = "0.5"; }
-    
-    const cust = customersList.find(c => c.customer_id === id);
-    if(cust) {
-        if(type === 'add') { cust.stamps = (cust.stamps || 0) + 1; }
-        else if (type === 'remove') { cust.stamps = Math.max(0, (cust.stamps || 0) - 1); }
-        else if (type === 'reset') { cust.stamps = 0; cust.redeems = (cust.redeems || 0) + 1; }
-        renderAdminList(customersList);
-    }
-
-    await fetch(`${API_URL}/customer`, {
-        method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({action: 'stamp', id, type})
-    });
-    loadCustomers(); 
-}
-
 async function createCustomer() {
     const name = document.getElementById('new-name').value;
     const mobile = document.getElementById('new-mobile').value;
@@ -192,7 +213,11 @@ async function createCustomer() {
             document.getElementById('new-name').value = "";
             document.getElementById('new-mobile').value = "";
             generateIDCard(name, data.customerId, 0); 
-            loadCustomers();
+            
+            // Fetch list fresh
+            const listRes = await fetch(`${API_URL}/customer?action=list`);
+            customersList = await listRes.json();
+            renderAdminList(customersList);
         } else { alert("Error: " + data.error); }
     } catch (e) { alert("Network Error"); } 
     finally { btn.innerText = "Generate ID"; btn.disabled = false; }
@@ -212,8 +237,11 @@ async function deleteCustomer(id) {
     const { error } = await supabaseClient.auth.signInWithPassword({ email: currentUserEmail, password: password });
     if (error) return alert("Wrong Password!");
 
+    // Optimistic Delete (Remove from screen instantly)
+    customersList = customersList.filter(c => c.customer_id !== id);
+    renderAdminList(customersList);
+
     await fetch(`${API_URL}/customer`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'delete', id}) });
-    loadCustomers();
 }
 
 // ==========================================
