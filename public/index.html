@@ -6,54 +6,30 @@
     <title>Customer Portal</title>
     <link rel="stylesheet" href="css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="apple-touch-icon" href="/assets/logo.png">
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js"></script>
     
     <script>
-        let tapCount = 0;
-        let tapTimer = null;
-
+        let tapCount = 0, tapTimer = null;
         function secretAdminAccess() {
-            // Visual bounce
             const logo = document.getElementById('secret-logo-img');
-            if(logo) {
-                logo.style.transform = "scale(0.95)";
-                setTimeout(() => logo.style.transform = "scale(1)", 100);
-            }
-
-            tapCount++;
-            
-            // Reset if user is too slow (1.5 seconds)
-            if (tapTimer) clearTimeout(tapTimer);
-            tapTimer = setTimeout(() => { tapCount = 0; }, 1500);
-
-            if (tapCount >= 5) {
-                // Flash Gold
-                document.body.style.backgroundColor = "#ffd700";
-                
-                // Redirect to Admin Page
-                setTimeout(() => {
-                    window.location.href = 'dashboard_secure.html'; 
-                }, 300);
-                
-                tapCount = 0;
-            }
+            if(logo) { logo.style.transform = "scale(0.95)"; setTimeout(() => logo.style.transform = "scale(1)", 100); }
+            tapCount++; clearTimeout(tapTimer); tapTimer = setTimeout(() => { tapCount = 0; }, 1500);
+            if (tapCount >= 5) { document.body.style.backgroundColor = "#ffd700"; setTimeout(() => { window.location.href = 'dashboard_secure.html'; }, 300); }
         }
     </script>
 </head>
 <body>
-
     <div class="glass-panel app-section" id="cust-login-sec">
         <header class="app-header">
             <div class="logo-wrapper" onclick="secretAdminAccess()">
                 <img id="secret-logo-img" src="assets/logo.png" class="shop-logo">
             </div>
             <h1>CUSTOMER PORTAL</h1>
-            <p class="subtitle">Check Your Rank</p>
         </header>
-
         <div class="input-group">
-            <input type="text" id="cust-login-id" placeholder="Enter Rune ID (e.g. RK1234)">
+            <input type="text" id="cust-login-id" placeholder="Enter Rune ID">
             <button onclick="customerLogin()" class="primary-btn pulse-btn">Check Stats</button>
         </div>
     </div>
@@ -75,10 +51,7 @@
 
         <h3 style="margin-top:20px; color:gold;">Current Quest</h3>
         <div class="stamp-container" id="cust-stamps-display"></div>
-        
-        <div style="background:rgba(0,0,0,0.5); padding:10px; border-radius:8px; margin:10px 0;">
-            <p id="cust-status-msg" style="margin:0;"></p>
-        </div>
+        <div style="background:rgba(0,0,0,0.5); padding:10px; border-radius:8px; margin:10px 0;"><p id="cust-status-msg" style="margin:0;"></p></div>
 
         <button id="view-my-id-btn" class="secondary-btn">💳 View ID Card</button>
         <button onclick="location.reload()" class="secondary-btn" style="margin-top:10px;">Exit</button>
