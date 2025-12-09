@@ -2,23 +2,18 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Customer Archive</title>
-    <meta name="theme-color" content="#8a0303">
     <link rel="stylesheet" href="css/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js"></script>
 </head>
-<body>
+<body id="history-portal"> <a href="dashboard_secure.html" class="home-icon">🔙</a>
 
-    <a href="dashboard_secure.html" class="home-icon">🔙</a>
-
-    <div class="glass-panel" style="max-width: 800px;"> <header class="app-header">
+    <div class="glass-panel" style="max-width: 800px;">
+        <header class="app-header">
             <img src="assets/logo.png" class="shop-logo" style="width:80px; height:80px;">
             <h1>FULL ARCHIVE</h1>
-            <p class="subtitle">Complete Database History</p>
         </header>
 
         <input type="text" id="history-search" placeholder="🔍 Search Database..." onkeyup="searchHistory()">
@@ -28,15 +23,14 @@
                 <thead>
                     <tr style="background:#222; border-bottom: 2px solid #ffd700; text-align:left;">
                         <th style="padding:10px;">Name</th>
-                        <th style="padding:10px;">Mobile</th>
-                        <th style="padding:10px;">ID</th>
-                        <th style="padding:10px;">Status</th>
-                        <th style="padding:10px;">Action</th>
+                        <th>Mobile</th>
+                        <th>ID</th>
+                        <th>Status</th>
+                        <th>Card</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
-                <tbody id="history-table-body">
-                    <tr><td colspan="5" style="text-align:center; padding:20px;">Loading...</td></tr>
-                </tbody>
+                <tbody id="history-table-body"></tbody>
             </table>
         </div>
     </div>
@@ -54,28 +48,5 @@
     </div>
 
     <script src="js/app.js"></script>
-    
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            if(typeof supabase !== 'undefined') {
-                // Initialize Client manually here to check session quickly
-                // (Note: app.js also initializes it, but we want to trigger loadCustomers('history') explicitly)
-                
-                // Wait for app.js to load the Supabase client
-                setTimeout(() => {
-                    // Check if user is logged in
-                    supabaseClient.auth.getSession().then(({data}) => {
-                        if(data.session) {
-                            // Load History Mode
-                            loadCustomers('history');
-                        } else {
-                            // Not logged in? Kick back to login
-                            window.location.href = 'dashboard_secure.html';
-                        }
-                    });
-                }, 500);
-            }
-        });
-    </script>
 </body>
 </html>
