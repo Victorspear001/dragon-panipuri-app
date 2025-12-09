@@ -1,5 +1,6 @@
 // --- CONFIGURATION ---
 const API_URL = '/api';
+// ⚠️ PASTE KEYS HERE
 const SUPABASE_URL = 'https://iszzxbakpuwjxhgjwrgi.supabase.co'; 
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlzenp4YmFrcHV3anhoZ2p3cmdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyNDE4MDcsImV4cCI6MjA3OTgxNzgwN30.NwWX_PUzLKsfw2UjT0SK7wCZyZnd9jtvggf6bAlD3V0'; 
 
@@ -7,29 +8,37 @@ let supabaseClient = null;
 let currentUserEmail = null;
 let customersList = []; 
 
+// --- INITIALIZATION ---
 if (typeof supabase !== 'undefined') {
     supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     
+    // AUTH LISTENER: Handles ALL Redirects & Loading
     supabaseClient.auth.onAuthStateChange((event, session) => {
         if (event === 'SIGNED_IN' && session) {
             currentUserEmail = session.user.email;
-            // Check which page we are on
-            if (document.getElementById('admin-dashboard')) {
+            
+            // If on Admin Page, Load Data
+            if (document.getElementById('admin-portal')) {
                 showSection('admin-dashboard');
-                loadCustomers('list'); // Main List
+                loadCustomers('list');
             }
-            if (document.getElementById('history-table-body')) {
-                loadCustomers('history'); // History Page
+            // If on History Page, Load History
+            if (document.getElementById('history-portal')) {
+                loadCustomers('history');
+            }
+        } else if (event === 'SIGNED_OUT') {
+            // Force Login View
+            if (document.getElementById('admin-portal')) {
+                showSection('admin-login-sec');
             }
         }
-        if (event === 'PASSWORD_RECOVERY') showSection('admin-update-pass-sec');
     });
 }
 
 function showSection(id) {
-    if(!document.getElementById(id)) return;
     document.querySelectorAll('.app-section').forEach(el => el.classList.add('hidden'));
-    document.getElementById(id).classList.remove('hidden');
+    const target = document.getElementById(id);
+    if(target) target.classList.remove('hidden');
 }
 
 // ==========================================
@@ -47,43 +56,53 @@ function getRankInfo(redeems) {
 }
 
 // ==========================================
-// 📋 DATA LOADING (Unified)
+// 📋 DATA LOADING (Fixed)
 // ==========================================
 async function loadCustomers(mode = 'list') {
     const listEl = document.getElementById('customer-list');
-    const tableEl = document.getElementById('history-table-body');
+    const historyEl = document.getElementById('history-table-body');
     
-    // UI Loading States
-    if(mode === 'list' && listEl && customersList.length === 0) listEl.innerHTML = '<div style="color:#888;">Summoning...</div>';
-    if(mode === 'history' && tableEl) tableEl.innerHTML = '<tr><td colspan="6">Loading Scrolls...</td></tr>';
+    // Show Loading
+    if(mode === 'list' && listEl) listEl.innerHTML = '<div style="color:#888;">Loading Scrolls...</div>';
+    if(mode === 'history' && historyEl) historyEl.innerHTML = '<tr><td colspan="6" style="text-align:center;">Loading...</td></tr>';
 
     try {
         const res = await fetch(`${API_URL}/customer?action=${mode}`);
+        if(!res.ok) throw new Error("Server Error");
+        
         customersList = await res.json();
         
-        if (mode === 'list') renderAdminList(customersList);
-        if (mode === 'history') renderHistoryTable(customersList);
+        if(mode === 'list') renderAdminList(customersList);
+        if(mode === 'history') renderHistoryTable(customersList);
         
-    } catch(e) { console.error(e); }
+    } catch(e) { 
+        console.error(e);
+        if(listEl) listEl.innerHTML = `<div style="color:red;">Error loading list. <button onclick="loadCustomers('${mode}')">Retry</button></div>`;
+    }
 }
 
-// ==========================================
-// 🖥️ MAIN ADMIN DASHBOARD RENDER
-// ==========================================
+// 1. ADMIN LIST RENDER
 function renderAdminList(data) {
     const el = document.getElementById('customer-list');
     if(!el) return;
     el.innerHTML = "";
     
+    if(!data || data.length === 0) {
+        el.innerHTML = '<div style="color:#666;">No customers found.</div>';
+        return;
+    }
+
     data.forEach(c => {
-        const rank = getRankInfo(c.redeems || 0);
-        let btns = (c.stamps >= 6) ? 
+        const rank = getRankInfo(c.redeems);
+        const stamps = c.stamps || 0;
+        
+        let btns = (stamps >= 6) ? 
             `<button onclick="updateStamp('${c.customer_id}', 'reset')" class="primary-btn" style="flex:2;">🎁 REDEEM</button>` :
             `<button onclick="updateStamp('${c.customer_id}', 'add')" class="primary-btn" style="flex:2;">+ Stamp</button>`;
 
         el.innerHTML += `
             <div class="cust-item">
-                <img src="assets/${rank.img}" class="rank-mini-icon" onerror="this.src='assets/logo.png'">
+                <img src="assets/${rank.img}" class="rank-mini-icon" onerror="this.style.display='none'">
                 <div class="cust-header">
                     <div>
                         <div style="font-weight:bold; font-size:1.1em; color:white;">
@@ -92,7 +111,7 @@ function renderAdminList(data) {
                         <div style="color:${rank.color}; font-size:0.9em;">ID: ${c.customer_id} | Mob: ${c.mobile}</div>
                     </div>
                 </div>
-                <div class="stamp-container">${getDragonBalls(c.stamps||0)}</div>
+                <div class="stamp-container">${getDragonBalls(stamps)}</div>
                 <div style="display:flex; gap:5px;">
                     ${btns}
                     <button onclick="updateStamp('${c.customer_id}', 'remove')" class="secondary-btn" style="flex:1;">-</button>
@@ -105,9 +124,7 @@ function renderAdminList(data) {
     });
 }
 
-// ==========================================
-// 📜 HISTORY PAGE RENDER (New)
-// ==========================================
+// 2. HISTORY TABLE RENDER
 function renderHistoryTable(data) {
     const el = document.getElementById('history-table-body');
     if(!el) return;
@@ -115,7 +132,6 @@ function renderHistoryTable(data) {
 
     data.forEach(c => {
         const isDeleted = c.is_deleted ? '<span style="color:red;">DELETED</span>' : '<span style="color:#0f0;">ACTIVE</span>';
-        const rank = getRankInfo(c.redeems);
         
         el.innerHTML += `
             <tr style="border-bottom:1px solid #333;">
@@ -124,10 +140,10 @@ function renderHistoryTable(data) {
                 <td>${c.customer_id}</td>
                 <td>${isDeleted}</td>
                 <td>
-                    <button onclick="generateIDCard('${c.name}', '${c.customer_id}', ${c.redeems||0})" class="secondary-btn" style="padding:5px 10px; font-size:0.8em;">💳 ID</button>
+                    <button onclick="generateIDCard('${c.name}', '${c.customer_id}', ${c.redeems||0})" class="secondary-btn" style="padding:5px 10px; font-size:0.8em;">ID</button>
                 </td>
                 <td>
-                    ${c.is_deleted ? `<button onclick="permanentDelete('${c.customer_id}')" class="danger-btn" style="padding:5px; font-size:0.8em;">🗑️ Forever</button>` : '-'}
+                    ${c.is_deleted ? `<button onclick="permanentDelete('${c.customer_id}')" class="danger-btn" style="padding:5px; font-size:0.8em;">🗑️</button>` : '-'}
                 </td>
             </tr>
         `;
@@ -135,11 +151,16 @@ function renderHistoryTable(data) {
 }
 
 function getDragonBalls(count) {
-    let html = ''; for(let i=0; i<6; i++) html += `<div class="dragon-ball ${i < count ? 'filled' : ''}"></div>`; return html;
+    let html = '';
+    for(let i=0; i<6; i++) {
+        const filled = i < count ? 'filled' : '';
+        html += `<div class="dragon-ball ${filled}"></div>`;
+    }
+    return html;
 }
 
 // ==========================================
-// 🔍 SEARCH (By Name, ID, Mobile)
+// 🔍 SEARCH (Mobile + Name + ID)
 // ==========================================
 function searchCustomers() {
     const q = document.getElementById('search-input').value.toLowerCase();
@@ -162,40 +183,67 @@ function searchHistory() {
 }
 
 // ==========================================
-// ✏️ EDIT & DELETE LOGIC
+// ⚡ ACTIONS (Create / Edit / Delete)
 // ==========================================
+async function createCustomer() {
+    const name = document.getElementById('new-name').value;
+    const mobile = document.getElementById('new-mobile').value;
+    
+    if(!name || !mobile) return alert("Fill all fields");
+
+    const res = await fetch(`${API_URL}/customer`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'add', name, mobile}) });
+    const data = await res.json();
+    
+    if(res.ok) { 
+        document.getElementById('new-name').value = "";
+        document.getElementById('new-mobile').value = "";
+        generateIDCard(name, data.customerId, 0); 
+        loadCustomers('list'); 
+    } else alert(data.error);
+}
+
+async function updateStamp(id, type) {
+    // Optimistic
+    const cust = customersList.find(c => c.customer_id === id);
+    if(cust) {
+        if(type === 'add') cust.stamps = (cust.stamps||0)+1;
+        else if(type === 'remove') cust.stamps = Math.max(0, (cust.stamps||0)-1);
+        else if(type === 'reset') { cust.stamps = 0; cust.redeems = (cust.redeems||0)+1; }
+        renderAdminList(customersList);
+    }
+    
+    await fetch(`${API_URL}/customer`, {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({action: 'stamp', id, type})
+    });
+    // Silent reload
+    loadCustomers('list');
+}
+
 async function editName(id, oldName) {
     const newName = prompt("Enter new name:", oldName);
     if(newName && newName !== oldName) {
-        // Optimistic update
         const c = customersList.find(x => x.customer_id === id);
-        if(c) c.name = newName;
-        renderAdminList(customersList);
+        if(c) { c.name = newName; renderAdminList(customersList); }
         
         await fetch(`${API_URL}/customer`, {
             method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({action: 'edit_name', id: id, name: newName})
+            body: JSON.stringify({action: 'edit_name', id, name: newName})
         });
     }
 }
 
 async function softDeleteCustomer(id) {
-    if(!confirm("Remove from active list? (Data will be kept in History)")) return;
-    
-    // Remove from UI instantly
+    if(!confirm("Remove from Active List? (Saved in History)")) return;
     customersList = customersList.filter(c => c.customer_id !== id);
     renderAdminList(customersList);
-
-    await fetch(`${API_URL}/customer`, {
-        method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({action: 'soft_delete', id})
-    });
+    
+    await fetch(`${API_URL}/customer`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'soft_delete', id}) });
 }
 
 async function permanentDelete(id) {
-    if(!confirm("⚠️ WARNING: This will permanently delete this customer. This cannot be undone.")) return;
-    
-    const password = prompt("Enter Admin Password to confirm PERMANENT DELETION:");
+    if(!confirm("⚠️ Delete FOREVER? This cannot be undone.")) return;
+    const password = prompt("Admin Password:");
     if(!password) return;
 
     if (!currentUserEmail) {
@@ -204,19 +252,14 @@ async function permanentDelete(id) {
     }
 
     const { error } = await supabaseClient.auth.signInWithPassword({ email: currentUserEmail, password });
-    if (error) return alert("❌ Wrong Password!");
+    if (error) return alert("Wrong Password");
 
-    await fetch(`${API_URL}/customer`, {
-        method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({action: 'permanent_delete', id})
-    });
-    
-    alert("Deleted Forever.");
-    loadCustomers('history'); // Reload history table
+    await fetch(`${API_URL}/customer`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'permanent_delete', id}) });
+    loadCustomers('history');
 }
 
 // ==========================================
-// 🎨 HIGH QUALITY ID CARD + SHARE
+// 🎨 ID CARD + SHARE
 // ==========================================
 async function generateIDCard(name, id, redeems = 0) {
     document.getElementById('id-modal').classList.remove('hidden');
@@ -224,20 +267,17 @@ async function generateIDCard(name, id, redeems = 0) {
     const ctx = canvas.getContext('2d');
     const rank = getRankInfo(redeems);
 
-    // 1. High Res Setup (2x Scale)
-    const scale = 2; 
-    canvas.width = 450 * scale;
-    canvas.height = 270 * scale;
-    ctx.scale(scale, scale);
+    // High Res
+    const scale = 2; canvas.width = 450 * scale; canvas.height = 270 * scale; ctx.scale(scale, scale);
 
-    // Load Images
     const loadImage = (src) => new Promise(r => { let i=new Image(); i.onload=()=>r(i); i.onerror=()=>r(null); i.src=src; });
+    
     const qrData = await QRCode.toDataURL(id, {width:100, margin:1, color:{dark:"#000", light:"#fff"}});
     const qrImg = await loadImage(qrData);
     const logoImg = await loadImage('assets/logo.png');
     const shieldImg = await loadImage(`assets/${rank.img}`);
 
-    // Drawing Logic (Same design, just higher res context)
+    // Draw
     const grd = ctx.createLinearGradient(0,0,450,270);
     grd.addColorStop(0,"#0a0a0a"); grd.addColorStop(1,"#1a1a1a");
     ctx.fillStyle = grd; ctx.fillRect(0,0,450,270);
@@ -266,25 +306,13 @@ async function generateIDCard(name, id, redeems = 0) {
     ctx.fillStyle="#fff"; ctx.font="12px sans-serif"; ctx.fillText(rank.name+" TIER",25,250);
 }
 
-// 📤 SHARE FUNCTION (Web Share API)
 async function shareIDCard() {
     const canvas = document.getElementById('cardCanvas');
     canvas.toBlob(async (blob) => {
-        const file = new File([blob], "RK_Dragon_Card.png", { type: "image/png" });
-        
-        // Mobile Share Logic
+        const file = new File([blob], "RK_Card.png", { type: "image/png" });
         if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-            try {
-                await navigator.share({
-                    files: [file],
-                    title: 'RK Dragon ID Card',
-                    text: 'Join the snack warriors!'
-                });
-            } catch (err) { console.log("Share failed", err); }
-        } else {
-            // Fallback for Desktop
-            downloadID();
-        }
+            try { await navigator.share({ files: [file] }); } catch (err) {}
+        } else { downloadID(); }
     });
 }
 
@@ -293,18 +321,16 @@ function downloadID() {
     link.href = document.getElementById('cardCanvas').toDataURL(); link.click();
 }
 
-// ... (Keep Auth, Import, Export, Create, UpdateStamp functions from previous code here) ...
-// CSV Export Fix
+// CSV Logic
 function exportCSV() {
-    if (customersList.length === 0) return alert("No data");
+    if(customersList.length === 0) return alert("No data");
     const headers = ["Name", "Mobile", "ID", "Stamps", "Redeems", "Lifetime"];
     const rows = customersList.map(c => [`"${c.name}"`, `"${c.mobile}"`, c.customer_id, c.stamps, c.redeems||0, c.lifetime_stamps||0]);
     const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `Dragon_Backup.csv`; link.click();
+    const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `Dragon_Data.csv`; link.click();
 }
 
-// CSV Import Fix
 function importCSV() {
     const fileInput = document.getElementById('csv-input');
     const file = fileInput.files[0];
@@ -316,27 +342,17 @@ function importCSV() {
         if (lines.length < 2) return alert("Invalid CSV");
         const headers = lines[0].toLowerCase().split(",").map(h => h.trim().replace(/"/g, ''));
         const idxName = headers.indexOf('name'); const idxMobile = headers.indexOf('mobile'); const idxID = headers.indexOf('id');
-        if(idxName === -1 || idxID === -1) return alert("CSV needs Name & ID columns");
+        if(idxName === -1 || idxID === -1) return alert("CSV needs Name & ID");
         let batch = [];
         for (let i = 1; i < lines.length; i++) {
             const cols = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || [];
             if (cols.length < 2) continue;
-            const clean = (val) => val ? val.replace(/^"|"$/g, '').trim() : "";
-            const cName = clean(cols[idxName]);
-            const cID = clean(cols[idxID]);
-            if (cName && cID) {
-                batch.push({
-                    name: cName, mobile: clean(cols[idxMobile]||""), customer_id: cID, 
-                    stamps: parseInt(clean(cols[headers.indexOf('stamps')]))||0, 
-                    redeems: parseInt(clean(cols[headers.indexOf('redeems')]))||0, 
-                    lifetime_stamps: parseInt(clean(cols[headers.indexOf('lifetime')]))||0 
-                });
-            }
+            const clean = (v) => v ? v.replace(/^"|"$/g, '').trim() : "";
+            const cName = clean(cols[idxName]); const cID = clean(cols[idxID]);
+            if (cName && cID) batch.push({ name: cName, mobile: clean(cols[idxMobile]||""), customer_id: cID, stamps: parseInt(clean(cols[headers.indexOf('stamps')]))||0, redeems: parseInt(clean(cols[headers.indexOf('redeems')]))||0, lifetime_stamps: parseInt(clean(cols[headers.indexOf('lifetime')]))||0 });
             if (batch.length >= 50 || i === lines.length - 1) {
-                if (batch.length > 0) {
-                    await fetch(`${API_URL}/customer`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ action: 'import', data: batch }) });
-                    batch = [];
-                }
+                await fetch(`${API_URL}/customer`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ action: 'import', data: batch }) });
+                batch = [];
             }
         }
         alert("Imported!"); loadCustomers(); fileInput.value = "";
@@ -344,5 +360,62 @@ function importCSV() {
     reader.readAsText(file);
 }
 
-// Add these back if not present: adminSignIn, adminSignUp, resetAdminPassword, updateAdminPassword, adminSignOut, createCustomer, updateStamp
-// (Use the logic from the previous response for these, they are standard).
+// Auth Helpers
+async function adminSignIn() {
+    const username = document.getElementById('login-username').value;
+    const password = document.getElementById('login-pass').value;
+    const { data } = await supabaseClient.from('admin_profiles').select('email').eq('username', username).single();
+    if (!data) return alert("User not found");
+    const { error } = await supabaseClient.auth.signInWithPassword({ email: data.email, password });
+    if (error) alert("Wrong Password");
+}
+async function adminSignUp() {
+    const email = document.getElementById('reg-email').value;
+    const password = document.getElementById('reg-pass').value;
+    const username = document.getElementById('reg-username').value;
+    const { error } = await supabaseClient.auth.signUp({ email, password });
+    if (error) return alert(error.message);
+    await supabaseClient.from('admin_profiles').insert([{ username, email }]);
+    alert("Registered!"); showSection('admin-login-sec');
+}
+async function resetAdminPassword() {
+    const email = document.getElementById('forgot-email').value;
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: window.location.href });
+    if(error) alert(error.message); else alert("Link sent!");
+}
+async function updateAdminPassword() {
+    const newPass = document.getElementById('new-password').value;
+    const { error } = await supabaseClient.auth.updateUser({ password: newPass });
+    if (error) alert(error.message); else { alert("Updated! Login."); adminSignOut(); }
+}
+async function adminSignOut() { await supabaseClient.auth.signOut(); window.location.reload(); }
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+function showAdminTab(tab) {
+    document.getElementById('adm-add-sec').classList.add('hidden'); document.getElementById('adm-list-sec').classList.add('hidden');
+    if(tab === 'add') document.getElementById('adm-add-sec').classList.remove('hidden');
+    if(tab === 'list') { document.getElementById('adm-list-sec').classList.remove('hidden'); loadCustomers('list'); }
+}
+
+// CUSTOMER PAGE
+async function customerLogin() {
+    const id = document.getElementById('cust-login-id').value.trim();
+    if(!id) return alert("Enter ID");
+    try {
+        const res = await fetch(`${API_URL}/customer?action=login&id=${id}`);
+        const data = await res.json();
+        if(res.ok && data.customer_id) { showSection('cust-dashboard'); renderCustomerStats(data); } else alert("ID not found");
+    } catch (e) { alert("Connection Error"); }
+}
+function renderCustomerStats(c) {
+    const rank = getRankInfo(c.redeems || 0);
+    document.getElementById('display-cust-name').innerText = c.name;
+    document.getElementById('display-rank-name').innerText = rank.name;
+    document.getElementById('display-rank-name').style.color = rank.color;
+    document.getElementById('display-redeems').innerText = c.redeems || 0;
+    document.getElementById('rank-shield-img').src = `assets/${rank.img}`;
+    const nextGoal = rank.next;
+    const progress = Math.min(((c.redeems || 0) / nextGoal) * 100, 100);
+    document.getElementById('xp-bar').style.width = `${progress}%`;
+    document.getElementById('cust-stamps-display').innerHTML = getDragonBalls(c.stamps||0);
+    document.getElementById('view-my-id-btn').onclick = () => generateIDCard(c.name, c.customer_id, c.redeems);
+}
