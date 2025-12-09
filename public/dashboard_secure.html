@@ -10,7 +10,6 @@
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js"></script>
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 </head>
 <body>
 
@@ -60,56 +59,54 @@
             <div style="display:flex; gap:5px; margin-bottom:20px;">
                 <button onclick="showAdminTab('add')" class="secondary-btn" style="flex:1;">Add</button>
                 <button onclick="showAdminTab('list')" class="secondary-btn" style="flex:1;">List</button>
+                <a href="admin_history.html" class="secondary-btn" style="flex:1; text-align:center; text-decoration:none; padding-top:14px; color:#ccc;">History</a>
                 <button onclick="adminSignOut()" class="danger-btn" style="flex:1;">Logout</button>
             </div>
 
             <div id="adm-add-sec">
-                <input type="text" id="new-name" placeholder="Name">
-                <input type="number" id="new-mobile" placeholder="Mobile">
-                <button onclick="createCustomer()" class="primary-btn">Generate ID</button>
+                <h3>Summon Customer</h3>
+                <input type="text" id="new-name" placeholder="Customer Name">
+                <input type="number" id="new-mobile" placeholder="Mobile Number">
+                <button onclick="createCustomer()" class="primary-btn">Generate ID Card</button>
             </div>
 
             <div id="adm-list-sec" class="hidden">
                 <div style="display:flex; gap:5px; margin-bottom:10px;">
-                    <button onclick="exportCSV()" class="secondary-btn" style="font-size:0.8em;">⬇ CSV</button>
-                    <button onclick="document.getElementById('csv-input').click()" class="secondary-btn" style="font-size:0.8em;">⬆ Import</button>
+                    <button onclick="exportCSV()" class="secondary-btn" style="font-size:0.8em;">⬇ Export CSV</button>
+                    <button onclick="document.getElementById('csv-input').click()" class="secondary-btn" style="font-size:0.8em;">⬆ Import CSV</button>
                     <input type="file" id="csv-input" accept=".csv" class="hidden" onchange="importCSV()">
                 </div>
                 
-                <div class="search-wrapper">
-                    <input type="text" id="search-input" placeholder="🔍 Search ID / Mobile..." onkeyup="searchCustomers()">
-                    <button onclick="startScanner()" class="scan-btn">📷</button>
-                </div>
-
-                <div id="customer-list"></div>
+                <input type="text" id="search-input" placeholder="🔍 Search Name, ID, or Mobile..." onkeyup="searchCustomers()">
+                
+                <div id="customer-list">Loading scrolls...</div>
             </div>
         </section>
     </div>
 
     <div id="id-modal" class="modal hidden">
         <div class="modal-content">
-            <canvas id="cardCanvas" width="450" height="270"></canvas>
+            <canvas id="cardCanvas" style="width:100%; height:auto;"></canvas>
             <br>
-            <button onclick="downloadID()" class="primary-btn">Save Image</button>
-            <button onclick="closeModal('id-modal')" class="secondary-btn">Close</button>
-        </div>
-    </div>
-
-    <div id="scanner-modal" class="modal hidden">
-        <div class="modal-content">
-            <h3 style="color:gold;">DRAGON VISION</h3>
-            <div id="reader" style="width: 100%; border: 2px solid gold;"></div>
-            <br>
-            <button onclick="stopScanner()" class="secondary-btn">Close Scanner</button>
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <button onclick="shareIDCard()" class="primary-btn" style="flex:1;">📤 Share</button>
+                <button onclick="downloadID()" class="secondary-btn" style="flex:1;">⬇ Save</button>
+            </div>
+            <button onclick="closeModal('id-modal')" class="secondary-btn" style="margin-top:5px; width:100%;">Close</button>
         </div>
     </div>
 
     <script src="js/app.js"></script>
+    
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            if(typeof supabase !== 'undefined' && typeof checkAdminSession === 'function') {
-                checkAdminSession();
-            }
+            // Wait slightly for Supabase to initialize
+            setTimeout(() => {
+                if(typeof supabase !== 'undefined' && typeof checkAdminSession === 'function') {
+                    // This function in app.js handles the logic to show the dashboard if logged in
+                    // It uses the auth listener we set up there.
+                }
+            }, 100);
         });
     </script>
 </body>
