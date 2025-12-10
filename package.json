@@ -1,7 +1,7 @@
 {
   "name": "rk-dragon-loyalty",
   "version": "1.0.0",
-  "description": "Loyalty System for RK Dragon Panipuri",
+  "description": "Loyalty System",
   "main": "api/customer.js",
   "engines": {
     "node": "20.x"
