@@ -8,27 +8,29 @@ module.exports = async function (req, res) {
   // 1. GET REQUESTS
   if (req.method === 'GET') {
     try {
-        // Login Search
+        // LOGIN (Updated: Checks ID OR Mobile)
         if (req.query.action === 'login') {
-            const result = await pool.query('SELECT * FROM customers WHERE customer_id = $1 AND is_deleted = FALSE', [req.query.id]);
-            if (result.rows.length === 0) return res.status(404).json({error: 'ID not found'});
+            const input = req.query.id; // This can be ID or Mobile
+            const result = await pool.query(
+                'SELECT * FROM customers WHERE (customer_id = $1 OR mobile = $1) AND is_deleted = FALSE', 
+                [input]
+            );
+            
+            if (result.rows.length === 0) return res.status(404).json({error: 'Account not found'});
             return res.status(200).json(result.rows[0]);
         }
         
-        // History Page (Show ALL)
+        // HISTORY (Show All)
         if (req.query.action === 'history') {
             const result = await pool.query('SELECT * FROM customers ORDER BY id DESC');
             return res.status(200).json(result.rows || []);
         }
 
-        // Main List (Show ACTIVE only)
+        // MAIN LIST (Active Only)
         const result = await pool.query('SELECT * FROM customers WHERE is_deleted = FALSE ORDER BY id DESC');
         return res.status(200).json(result.rows || []);
 
-    } catch (err) { 
-        console.error("DB Error:", err);
-        return res.status(500).json({ error: err.message }); 
-    }
+    } catch (err) { return res.status(500).json({ error: err.message }); }
   }
 
   // 2. POST REQUESTS
