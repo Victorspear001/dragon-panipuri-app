@@ -7,8 +7,11 @@
     <link rel="stylesheet" href="css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="/assets/logo.png">
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     
     <script>
         let tapCount = 0, tapTimer = null;
@@ -21,17 +24,22 @@
     </script>
 </head>
 <body>
+
     <div class="glass-panel app-section" id="cust-login-sec">
         <header class="app-header">
             <div class="logo-wrapper" onclick="secretAdminAccess()">
                 <img id="secret-logo-img" src="assets/logo.png" class="shop-logo">
             </div>
             <h1>CUSTOMER PORTAL</h1>
+            <p class="subtitle">Check Your Rank</p>
         </header>
-        <div class="input-group">
-            <input type="text" id="cust-login-id" placeholder="Enter Rune ID">
-            <button onclick="customerLogin()" class="primary-btn pulse-btn">Check Stats</button>
+
+        <div class="search-wrapper">
+            <input type="text" id="cust-login-id" placeholder="Enter ID or Mobile No.">
+            <button onclick="startCustomerScanner()" class="scan-btn">📷</button>
         </div>
+        
+        <button onclick="customerLogin()" class="primary-btn pulse-btn" style="margin-top:10px;">Check Stats</button>
     </div>
 
     <div class="glass-panel app-section hidden" id="cust-dashboard">
@@ -51,7 +59,10 @@
 
         <h3 style="margin-top:20px; color:gold;">Current Quest</h3>
         <div class="stamp-container" id="cust-stamps-display"></div>
-        <div style="background:rgba(0,0,0,0.5); padding:10px; border-radius:8px; margin:10px 0;"><p id="cust-status-msg" style="margin:0;"></p></div>
+        
+        <div style="background:rgba(0,0,0,0.5); padding:10px; border-radius:8px; margin:10px 0;">
+            <p id="cust-status-msg" style="margin:0;"></p>
+        </div>
 
         <button id="view-my-id-btn" class="secondary-btn">💳 View ID Card</button>
         <button onclick="location.reload()" class="secondary-btn" style="margin-top:10px;">Exit</button>
@@ -63,6 +74,15 @@
             <br>
             <button onclick="downloadID()" class="primary-btn">Save Image</button>
             <button onclick="closeModal('id-modal')" class="secondary-btn">Close</button>
+        </div>
+    </div>
+
+    <div id="scanner-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3 style="color:gold;">SCAN ID</h3>
+            <div id="reader" style="width: 100%; border: 2px solid gold;"></div>
+            <br>
+            <button onclick="stopScanner()" class="secondary-btn">Close Scanner</button>
         </div>
     </div>
 
